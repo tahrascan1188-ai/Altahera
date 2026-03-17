@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الطاهرة للأشعة والتحاليل الطبية | نظام الإدارة الموحد</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome for modern icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Login / Role Selection Screen -->
+    <div id="login-screen" class="view-screen active">
+        <div class="login-wrapper">
+            <div class="login-branding">
+                <img src="img/trc-logo.svg" alt="TRC Logo" class="trc-logo-login">
+                <h1>الطاهرة للأشعة والتحاليل الطبية</h1>
+                <p>نظام إدارة التحاليل والأشعة الموحد</p>
+            </div>
+
+            <div class="login-box glass-panel">
+                <h2>تسجيل الدخول للمنظومة</h2>
+
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="text" id="login-email" class="form-control"
+                        placeholder="أدخل البريد الإلكتروني أو اسم المستخدم" value="admin"
+                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 0.5rem; background: var(--surface);">
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>كلمة المرور</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="أدخل كلمة المرور"
+                        value="admin"
+                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 0.5rem; background: var(--surface);">
+                </div>
+                <button id="login-btn" class="btn btn-primary"
+                    style="width: 100%; margin-top: 1.5rem; padding: 0.8rem; font-size: 1.1rem;"
+                    onclick="app.loginWithEmail()">تسجيل الدخول</button>
+
+            </div>
+
+            <div class="login-footer">
+                <p>إصدار 1.0.0 &copy; 2026 الطاهرة للأشعة والتحاليل الطبية - جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Shell -->
+    <div id="app-shell" class="view-screen">
+
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <div class="logo">
+                <img src="img/trc-logo.svg" alt="TRC Logo" class="trc-logo-mobile"> الطاهرة للأشعة والتحاليل الطبية
+            </div>
+            <button class="mobile-nav-toggle" onclick="app.toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="img/trc-logo.svg" alt="TRC Logo" class="trc-logo-sidebar">
+                <h2 style="font-size: 1.1rem; text-align: center;">الطاهرة للأشعة والتحاليل الطبية</h2>
+            </div>
+
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fa-solid fa-user-circle fa-2x"></i>
+                </div>
+                <div class="user-details">
+                    <span id="current-user-role" class="user-role">موظف استقبال</span>
+                    <span id="current-user-branch" class="user-branch">فرع روكسي</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard" onclick="app.navigate('dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i> الرئيسية
+                </a>
+                <a href="#" class="nav-item" data-view="tests" onclick="app.navigate('tests')">
+                    <i class="fa-solid fa-flask-vial"></i> دليل التحاليل
+                </a>
+                <a href="#" class="nav-item" data-view="devices" onclick="app.navigate('devices')">
+                    <i class="fa-solid fa-laptop-medical"></i> أجهزة الأشعة
+                </a>
+                <a href="#" class="nav-item" data-view="doctors" onclick="app.navigate('doctors')">
+                    <i class="fa-solid fa-user-doctor"></i> جدول الأطباء
+                </a>
+
+                <!-- Admin/Manager Only Section -->
+                <div id="manager-menu" class="manager-menu hidden">
+                    <div class="nav-section-title">لوحة التحكم والتنظيم</div>
+                    <a href="#" class="nav-item" id="nav-manage-tests" data-view="manage-tests"
+                        onclick="app.navigate('manage-tests')">
+                        <i class="fa-solid fa-gear"></i> إدارة التحاليل
+                    </a>
+                    <a href="#" class="nav-item" id="nav-users" data-view="users" onclick="app.navigate('users')">
+                        <i class="fa-solid fa-users-gear"></i> إدارة المستخدمين
+                    </a>
+                    <a href="#" class="nav-item" id="nav-global-devices" data-view="global-devices"
+                        onclick="app.navigate('global-devices')">
+                        <i class="fa-solid fa-satellite-dish"></i> مراقبة أجهزة الفروع
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="app.logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dynamic content injected here -->
+            <div id="view-container" class="view-container">
+                <!-- Dashboard View -->
+                <div id="view-dashboard" class="content-view active">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Tests Catalog View -->
+                <div id="view-tests" class="content-view">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Devices View -->
+                <div id="view-devices" class="content-view">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Doctors Schedule View -->
+                <div id="view-doctors" class="content-view">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Manage Tests View (Manager Only) -->
+                <div id="view-manage-tests" class="content-view">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Users View (Admin Only) -->
+                <div id="view-users" class="content-view">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Global Devices Monitoring View (Admin/Manager Only) -->
+                <div id="view-global-devices" class="content-view">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="modal-overlay" class="modal-overlay" onclick="app.closeModal()"></div>
+    <div id="app-modal" class="app-modal glass-panel">
+        <div class="modal-header">
+            <h3 id="modal-title">العنوان</h3>
+            <button class="modal-close-btn" onclick="app.closeModal()"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div id="modal-body" class="modal-body">
+            <!-- Form content will be injected here via JS -->
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
