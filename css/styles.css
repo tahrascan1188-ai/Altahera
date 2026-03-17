@@ -1042,7 +1042,10 @@ body {
     background: #000;
     overflow: hidden;
     position: relative;
-    display: flex;
+}
+
+/* Only when active, set flex centering */
+#login-screen.active {
     align-items: center;
     justify-content: center;
 }
