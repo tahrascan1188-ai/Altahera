@@ -353,16 +353,22 @@
                 const btnText = document.getElementById('btn-text');
                 const loginBtn = document.getElementById('login-btn');
 
+                // Fallback: if elements are missing just login directly
+                if (!btnText || !scanOverlay) {
+                    if (window.app) app.loginWithEmail();
+                    return;
+                }
+
                 // Scanning animation
                 scanOverlay.classList.remove('scanning');
                 void scanOverlay.offsetWidth; // reflow hack
                 scanOverlay.classList.add('scanning');
 
                 btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري التحقق...';
-                loginBtn.disabled = true;
+                if (loginBtn) loginBtn.disabled = true;
 
                 setTimeout(() => {
-                    loginBtn.disabled = false;
+                    if (loginBtn) loginBtn.disabled = false;
                     btnText.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> دخول النظام';
                     if (window.app) app.loginWithEmail();
                 }, 1400);
