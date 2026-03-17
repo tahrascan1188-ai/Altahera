@@ -14,9 +14,16 @@ class StorageManager {
         };
         this.loadLocalCache();
 
-        // Local seed fallback if empty
-        if (this.cache.branches.length === 0 && typeof seedInitialData === 'function') {
+        // Always ensure critical data exists locally
+        if (typeof seedInitialData === 'function') {
             seedInitialData(this);
+        }
+        // Extra safety: always guarantee at least admin user exists
+        if (this.cache.users.length === 0 && typeof initialUsers !== 'undefined') {
+            this.saveLocalCache('users', initialUsers);
+        }
+        if (this.cache.branches.length === 0 && typeof initialBranches !== 'undefined') {
+            this.saveLocalCache('branches', initialBranches);
         }
     }
 
