@@ -1032,3 +1032,726 @@ body {
     width: auto;
     cursor: pointer;
 }
+
+/* =====================================================
+   PREMIUM AI PORTAL LOGIN SCREEN
+   ===================================================== */
+
+/* Base */
+#login-screen {
+    background: #000;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Particle canvas */
+#particle-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Hex Grid */
+.hex-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background-image:
+        radial-gradient(circle, rgba(0, 255, 247, 0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+    animation: hexPulse 8s ease-in-out infinite;
+}
+
+@keyframes hexPulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* HUD Lines */
+.hud-lines {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.hud-line {
+    position: absolute;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 247, 0.15), transparent);
+    animation: lineScan 6s linear infinite;
+}
+
+.hud-line-h {
+    width: 100%;
+    height: 1px;
+}
+
+.hud-line-v {
+    height: 100%;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(0, 255, 247, 0.12), transparent);
+}
+
+@keyframes lineScan {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Light Rays */
+.light-rays {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.ray {
+    position: absolute;
+    width: 2px;
+    height: 200%;
+    top: -50%;
+    background: linear-gradient(180deg, transparent, rgba(0, 255, 247, 0.12), transparent);
+    animation: raySweep 12s ease-in-out infinite;
+    transform-origin: center top;
+}
+
+.ray-1 {
+    left: 30%;
+    animation-delay: 0s;
+}
+
+.ray-2 {
+    left: 60%;
+    animation-delay: 4s;
+}
+
+.ray-3 {
+    left: 80%;
+    animation-delay: 8s;
+}
+
+@keyframes raySweep {
+    0% {
+        opacity: 0;
+        transform: rotate(-20deg);
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: rotate(20deg);
+    }
+}
+
+/* Portal wrapper */
+.ai-portal-wrapper {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* Portal State */
+.portal-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.portal-state.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+}
+
+/* Corner brackets for cyberpunk feel */
+.corner-bracket {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    border-color: rgba(0, 255, 247, 0.4);
+    border-style: solid;
+    z-index: 3;
+}
+
+.corner-bracket.top-left {
+    top: 20px;
+    left: 20px;
+    border-width: 2px 0 0 2px;
+}
+
+.corner-bracket.top-right {
+    top: 20px;
+    right: 20px;
+    border-width: 2px 2px 0 0;
+}
+
+.corner-bracket.bottom-left {
+    bottom: 20px;
+    left: 20px;
+    border-width: 0 0 2px 2px;
+}
+
+.corner-bracket.bottom-right {
+    bottom: 20px;
+    right: 20px;
+    border-width: 0 2px 2px 0;
+}
+
+/* Portal Header Text */
+.portal-header {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    text-align: right;
+}
+
+.portal-logo {
+    height: 55px;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 247, 0.5));
+}
+
+.portal-system-label {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    color: rgba(0, 255, 247, 0.6);
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+}
+
+.portal-main-title {
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(0, 255, 247, 0.5);
+}
+
+/* The Animated Portal Ring */
+.portal-container {
+    position: relative;
+    width: clamp(220px, 30vw, 300px);
+    height: clamp(220px, 30vw, 300px);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.portal-container:hover {
+    transform: scale(1.05);
+}
+
+.portal-container:hover .ring-outer {
+    filter: drop-shadow(0 0 30px #00fff7);
+}
+
+.ring {
+    position: absolute;
+    border-radius: 50%;
+    border-style: solid;
+    border-color: transparent;
+    inset: 0;
+}
+
+.ring-outer {
+    inset: 0;
+    border-width: 3px;
+    border-top-color: #00fff7;
+    border-right-color: rgba(0, 255, 247, 0.3);
+    animation: spinCW 6s linear infinite;
+    filter: drop-shadow(0 0 12px #00fff7);
+}
+
+.ring-mid {
+    inset: 18px;
+    border-width: 2px;
+    border-bottom-color: rgba(0, 255, 247, 0.7);
+    border-left-color: rgba(0, 255, 247, 0.2);
+    animation: spinCCW 4s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 247, 0.6));
+}
+
+.ring-inner {
+    inset: 36px;
+    border-width: 1.5px;
+    border-top-color: rgba(102, 26, 87, 0.9);
+    border-right-color: rgba(102, 26, 87, 0.4);
+    animation: spinCW 2.5s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(102, 26, 87, 0.7));
+}
+
+.ring-core {
+    inset: 54px;
+    border-width: 1px;
+    border-bottom-color: rgba(0, 255, 247, 0.5);
+    animation: spinCCW 3.5s linear infinite;
+}
+
+@keyframes spinCW {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes spinCCW {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+/* Light streaks inside ring */
+.streak {
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    animation: streakAnim 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.streak::before {
+    content: '';
+    position: absolute;
+    width: 40%;
+    height: 2px;
+    border-radius: 50%;
+    top: 50%;
+    left: 10%;
+    background: linear-gradient(90deg, transparent, #00fff7);
+    filter: blur(2px);
+}
+
+.streak-1 {
+    animation-duration: 3s;
+}
+
+.streak-2 {
+    animation-duration: 5s;
+    animation-delay: 1.5s;
+    transform: rotate(120deg);
+}
+
+@keyframes streakAnim {
+    0% {
+        transform: rotate(0deg);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: rotate(360deg);
+        opacity: 0.6;
+    }
+}
+
+/* Center of portal */
+.portal-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.portal-icon {
+    font-size: 2.8rem;
+    color: #00fff7;
+    animation: iconPulse 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 15px #00fff7);
+}
+
+@keyframes iconPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+.portal-click-hint {
+    font-size: 0.75rem;
+    color: rgba(0, 255, 247, 0.5);
+    letter-spacing: 1px;
+    animation: hintFade 2.5s ease-in-out infinite;
+}
+
+@keyframes hintFade {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Glow reflection below ring */
+.portal-glow-floor {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 20px;
+    background: radial-gradient(ellipse, rgba(0, 255, 247, 0.25), transparent);
+    filter: blur(6px);
+    animation: iconPulse 2.5s ease-in-out infinite;
+}
+
+/* Status bar */
+.portal-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: rgba(0, 255, 247, 0.6);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    font-family: 'Courier New', monospace;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00fff7;
+    animation: dotBlink 1.2s ease-in-out infinite;
+    box-shadow: 0 0 6px #00fff7;
+}
+
+@keyframes dotBlink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.2;
+    }
+}
+
+/* ---- LOGIN PANEL ---- */
+.login-panel {
+    position: absolute;
+    width: clamp(320px, 90vw, 430px);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.4);
+    transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.login-panel.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1);
+}
+
+/* Scan overlay */
+.scan-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    border-radius: 20px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.scan-overlay::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #00fff7, transparent);
+    top: -10px;
+    animation: scanLine 1.5s linear forwards;
+    animation-play-state: paused;
+    box-shadow: 0 0 10px #00fff7;
+}
+
+.scan-overlay.scanning::before {
+    animation-play-state: running;
+}
+
+@keyframes scanLine {
+    0% {
+        top: -10px;
+        opacity: 1;
+    }
+
+    100% {
+        top: 110%;
+        opacity: 0;
+    }
+}
+
+/* Panel inner */
+.panel-inner {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(0, 255, 247, 0.25);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow:
+        0 0 0 1px rgba(0, 255, 247, 0.05),
+        0 40px 80px rgba(0, 0, 0, 0.6),
+        inset 0 0 40px rgba(0, 255, 247, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+/* Panel header */
+.panel-logo-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.panel-sys-label {
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    color: rgba(0, 255, 247, 0.5);
+    font-family: 'Courier New', monospace;
+}
+
+.panel-title-ar {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 3px;
+}
+
+.panel-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 247, 0.3), transparent);
+    margin-top: 0.5rem;
+}
+
+/* Neon input fields */
+.neon-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.field-icon {
+    position: absolute;
+    right: 14px;
+    color: rgba(0, 255, 247, 0.4);
+    font-size: 0.9rem;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.neon-input {
+    width: 100%;
+    padding: 1rem 2.8rem 1rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 50, 80, 0.4);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 1rem;
+    font-family: 'Tajawal', sans-serif;
+    transition: all 0.3s ease;
+    outline: none;
+    direction: rtl;
+    box-shadow: 0 0 8px rgba(255, 50, 80, 0.15), inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.neon-input:focus {
+    border-color: rgba(0, 255, 247, 0.7);
+    box-shadow: 0 0 20px rgba(0, 255, 247, 0.2), inset 0 0 10px rgba(0, 255, 247, 0.03);
+    background: rgba(0, 255, 247, 0.04);
+}
+
+.neon-input:focus~.field-icon {
+    color: #00fff7;
+}
+
+.neon-input:focus~.neon-label,
+.neon-input:not(:placeholder-shown)~.neon-label {
+    top: -10px;
+    font-size: 0.7rem;
+    color: #00fff7;
+    background: #000;
+    padding: 0 6px;
+}
+
+.neon-label {
+    position: absolute;
+    right: 38px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.9rem;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    background: transparent;
+    font-family: 'Tajawal', sans-serif;
+}
+
+.field-glow {
+    position: absolute;
+    inset: -1px;
+    border-radius: 10px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 255, 247, 0.2);
+}
+
+.neon-input:focus~.field-glow {
+    opacity: 1;
+}
+
+/* Cyber Login Button */
+.cyber-btn {
+    position: relative;
+    width: 100%;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 1.05rem;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 700;
+}
+
+.cyber-btn-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 255, 247, 0.15), rgba(102, 26, 87, 0.4));
+    border: 1px solid rgba(0, 255, 247, 0.4);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.cyber-btn:hover .cyber-btn-bg {
+    background: linear-gradient(135deg, rgba(0, 255, 247, 0.3), rgba(102, 26, 87, 0.7));
+    border-color: rgba(0, 255, 247, 0.8);
+}
+
+.cyber-btn-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.cyber-btn-glow {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: radial-gradient(ellipse at center, rgba(0, 255, 247, 0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.cyber-btn:hover .cyber-btn-glow {
+    opacity: 1;
+}
+
+.cyber-btn:active {
+    transform: scale(0.98);
+}
+
+/* Panel footer */
+.panel-footer-text {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+}
+
+/* Zoom in animation for portal click */
+.portal-state.zoom-in {
+    animation: portalZoomIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes portalZoomIn {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 480px) {
+    .portal-container {
+        width: 200px;
+        height: 200px;
+    }
+
+    .panel-inner {
+        padding: 1.5rem;
+    }
+
+    .portal-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .corner-bracket {
+        display: none;
+    }
+}

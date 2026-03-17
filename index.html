@@ -23,40 +23,124 @@
     <!-- Notification Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- Login / Role Selection Screen -->
+    <!-- Login Screen: Premium AI Portal -->
     <div id="login-screen" class="view-screen active">
-        <div class="login-wrapper">
-            <div class="login-branding">
-                <img src="img/trc-logo.svg" alt="TRC Logo" class="trc-logo-login">
-                <h1>الطاهرة للأشعة والتحاليل الطبية</h1>
-                <p>نظام إدارة التحاليل والأشعة الموحد</p>
-            </div>
+        <!-- Particle Canvas -->
+        <canvas id="particle-canvas"></canvas>
 
-            <div class="login-box glass-panel">
-                <h2>تسجيل الدخول للمنظومة</h2>
+        <!-- Hex Grid Background -->
+        <div class="hex-grid"></div>
 
-                <div class="form-group">
-                    <label>البريد الإلكتروني</label>
-                    <input type="text" id="login-email" class="form-control"
-                        placeholder="أدخل البريد الإلكتروني أو اسم المستخدم" value="admin"
-                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 0.5rem; background: var(--surface);">
-                </div>
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label>كلمة المرور</label>
-                    <input type="password" id="login-password" class="form-control" placeholder="أدخل كلمة المرور"
-                        value="admin"
-                        style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 0.5rem; background: var(--surface);">
-                </div>
-                <button id="login-btn" class="btn btn-primary"
-                    style="width: 100%; margin-top: 1.5rem; padding: 0.8rem; font-size: 1.1rem;"
-                    onclick="app.loginWithEmail()">تسجيل الدخول</button>
-
-            </div>
-
-            <div class="login-footer">
-                <p>إصدار 1.0.0 &copy; 2026 الطاهرة للأشعة والتحاليل الطبية - جميع الحقوق محفوظة</p>
-            </div>
+        <!-- HUD Lines -->
+        <div class="hud-lines">
+            <div class="hud-line hud-line-h" style="top:20%"></div>
+            <div class="hud-line hud-line-h" style="top:80%"></div>
+            <div class="hud-line hud-line-v" style="left:15%"></div>
+            <div class="hud-line hud-line-v" style="left:85%"></div>
         </div>
+
+        <!-- Light rays -->
+        <div class="light-rays">
+            <div class="ray ray-1"></div>
+            <div class="ray ray-2"></div>
+            <div class="ray ray-3"></div>
+        </div>
+
+        <!-- Portal + Login Wrapper -->
+        <div class="ai-portal-wrapper" id="ai-portal-wrapper">
+
+            <!-- PORTAL STATE -->
+            <div class="portal-state" id="portal-state">
+                <!-- Corner Brackets -->
+                <div class="corner-bracket top-left"></div>
+                <div class="corner-bracket top-right"></div>
+                <div class="corner-bracket bottom-left"></div>
+                <div class="corner-bracket bottom-right"></div>
+
+                <!-- Logo & Title (above portal) -->
+                <div class="portal-header">
+                    <img src="img/trc-logo.svg" alt="TRC" class="portal-logo">
+                    <div class="portal-title-wrap">
+                        <div class="portal-system-label">ALTAHERA MEDICAL SYSTEM — v1.0</div>
+                        <h1 class="portal-main-title">الطاهرة للأشعة والتحاليل الطبية</h1>
+                    </div>
+                </div>
+
+                <!-- The Animated Ring Portal -->
+                <div class="portal-container" id="portal-btn" onclick="activatePortal()">
+                    <div class="ring ring-outer"></div>
+                    <div class="ring ring-mid"></div>
+                    <div class="ring ring-inner"></div>
+                    <div class="ring ring-core"></div>
+                    <div class="streak streak-1"></div>
+                    <div class="streak streak-2"></div>
+                    <div class="portal-center">
+                        <div class="portal-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="portal-click-hint">اضغط للدخول</div>
+                    </div>
+                    <div class="portal-glow-floor"></div>
+                </div>
+
+                <!-- Status Bar Below Portal -->
+                <div class="portal-status-bar">
+                    <span class="status-dot"></span>
+                    <span class="status-text">النظام جاهز — انتظار المصادقة</span>
+                </div>
+            </div>
+
+            <!-- LOGIN PANEL STATE (hidden initially) -->
+            <div class="login-panel" id="login-panel">
+                <!-- Scanning animation overlay -->
+                <div class="scan-overlay" id="scan-overlay"></div>
+
+                <!-- Panel Content -->
+                <div class="panel-inner">
+                    <div class="panel-header">
+                        <div class="panel-logo-row">
+                            <img src="img/trc-logo.svg" alt="TRC" style="height:40px;">
+                            <div>
+                                <div class="panel-sys-label">SYSTEM ACCESS</div>
+                                <div class="panel-title-ar">تسجيل الدخول الأمني</div>
+                            </div>
+                        </div>
+                        <div class="panel-divider"></div>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="neon-field" id="field-user">
+                        <i class="fa-solid fa-user field-icon"></i>
+                        <input type="text" id="login-email" class="neon-input" placeholder=" " value="admin"
+                            autocomplete="username">
+                        <label class="neon-label">اسم المستخدم</label>
+                        <div class="field-glow"></div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="neon-field" id="field-pass">
+                        <i class="fa-solid fa-key field-icon"></i>
+                        <input type="password" id="login-password" class="neon-input" placeholder=" " value="admin"
+                            autocomplete="current-password">
+                        <label class="neon-label">كلمة المرور</label>
+                        <div class="field-glow"></div>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button id="login-btn" class="cyber-btn" onclick="handleLoginClick()">
+                        <div class="cyber-btn-bg"></div>
+                        <div class="cyber-btn-inner">
+                            <span id="btn-text"><i class="fa-solid fa-arrow-right-to-bracket"></i> دخول النظام</span>
+                        </div>
+                        <div class="cyber-btn-glow"></div>
+                    </button>
+
+                    <!-- Footer -->
+                    <div class="panel-footer-text">
+                        الطاهرة للأشعة والتحاليل الطبية &copy; 2026
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end ai-portal-wrapper -->
     </div>
 
     <!-- Main Application Shell -->
@@ -185,6 +269,121 @@
     <script src="js/data.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- AI PORTAL ENGINE -->
+    <script>
+        (function () {
+            /* ── Particle System ── */
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            function Particle() {
+                this.reset();
+            }
+            Particle.prototype.reset = function () {
+                this.x = Math.random() * W;
+                this.y = Math.random() * H;
+                this.r = Math.random() * 1.5 + 0.3;
+                this.speed = Math.random() * 0.4 + 0.1;
+                this.alpha = Math.random() * 0.5 + 0.1;
+                this.dir = Math.random() * Math.PI * 2;
+            };
+            Particle.prototype.update = function () {
+                this.x += Math.cos(this.dir) * this.speed;
+                this.y += Math.sin(this.dir) * this.speed;
+                this.alpha += (Math.random() - 0.5) * 0.01;
+                this.alpha = Math.max(0.05, Math.min(0.6, this.alpha));
+                if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+            };
+            Particle.prototype.draw = function () {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0,255,247,${this.alpha})`;
+                ctx.fill();
+            };
+
+            for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+            function animate() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => { p.update(); p.draw(); });
+                requestAnimationFrame(animate);
+            }
+            animate();
+
+            /* ── Mouse Parallax ── */
+            let mx = 0, my = 0;
+            document.addEventListener('mousemove', e => {
+                mx = (e.clientX / window.innerWidth - 0.5) * 20;
+                my = (e.clientY / window.innerHeight - 0.5) * 20;
+                const wrapper = document.getElementById('ai-portal-wrapper');
+                if (wrapper) wrapper.style.transform = `translate(${mx * 0.4}px, ${my * 0.4}px)`;
+            });
+
+            /* ── Portal Activation ── */
+            window.activatePortal = function () {
+                const portalState = document.getElementById('portal-state');
+                const loginPanel = document.getElementById('login-panel');
+                const scanOverlay = document.getElementById('scan-overlay');
+
+                // Zoom-in the portal
+                portalState.classList.add('zoom-in');
+                setTimeout(() => {
+                    portalState.style.display = 'none';
+                    loginPanel.classList.add('active');
+                    // trigger scan
+                    setTimeout(() => {
+                        scanOverlay.classList.add('scanning');
+                        setTimeout(() => scanOverlay.classList.remove('scanning'), 1600);
+                    }, 200);
+                }, 550);
+            };
+
+            /* ── Login Handler with animation ── */
+            window.handleLoginClick = function () {
+                const scanOverlay = document.getElementById('scan-overlay');
+                const btnText = document.getElementById('btn-text');
+                const loginBtn = document.getElementById('login-btn');
+
+                // Scanning animation
+                scanOverlay.classList.remove('scanning');
+                void scanOverlay.offsetWidth; // reflow hack
+                scanOverlay.classList.add('scanning');
+
+                btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري التحقق...';
+                loginBtn.disabled = true;
+
+                setTimeout(() => {
+                    loginBtn.disabled = false;
+                    btnText.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> دخول النظام';
+                    if (window.app) app.loginWithEmail();
+                }, 1400);
+            };
+
+            /* ── Restore portal state on logout ── */
+            const origLogout = App.prototype.logout;
+            App.prototype.logout = function () {
+                origLogout.call(this);
+                // restore portal
+                const portalState = document.getElementById('portal-state');
+                const loginPanel = document.getElementById('login-panel');
+                if (portalState && loginPanel) {
+                    portalState.style.display = '';
+                    portalState.classList.remove('zoom-in', 'hidden');
+                    loginPanel.classList.remove('active');
+                }
+            };
+
+        })();
+    </script>
 </body>
 
 </html>
