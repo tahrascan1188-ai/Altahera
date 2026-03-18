@@ -51,7 +51,7 @@ class StorageManager {
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 sec timeout
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 sec timeout (GAS needs time on cold start)
 
             const res = await fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_DB`, { signal: controller.signal });
             clearTimeout(timeoutId);
@@ -84,11 +84,13 @@ class StorageManager {
                 Object.keys(db).forEach(k => {
                     this.saveLocalCache(k, db[k]);
                 });
+                console.log("✅ DB synced successfully from Google Sheets.");
                 return true;
             }
             return false;
         } catch (e) {
-            console.warn("Failed to sync DB from Google Sheets (Timeout/Network Error). Working happily from Local Cache.", e);
+            // This is normal on slow networks or Google cold-start — app uses local cache
+            console.info("ℹ️ Google Sheets sync pending (slow network / cold start). Using Local Cache.", e.name);
             return true; // Graceful offline mode
         }
     }
