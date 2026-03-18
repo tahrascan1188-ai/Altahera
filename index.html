@@ -318,6 +318,14 @@
             }
             animate();
 
+            /* ── Auto-activate login panel after 2 seconds ── */
+            setTimeout(() => {
+                if (document.getElementById('login-panel') &&
+                    !document.getElementById('login-panel').classList.contains('active')) {
+                    activatePortal();
+                }
+            }, 2000);
+
             /* ── Mouse Parallax ── */
             let mx = 0, my = 0;
             document.addEventListener('mousemove', e => {
@@ -372,6 +380,17 @@
                     if (window.app) app.loginWithEmail();
                 }, 1400);
             };
+
+            /* ── Restore portal state on logout ── */
+            /* ── Enter key support ── */
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    const panel = document.getElementById('login-panel');
+                    if (panel && panel.classList.contains('active')) {
+                        handleLoginClick();
+                    }
+                }
+            });
 
             /* ── Restore portal state on logout ── */
             const origLogout = App.prototype.logout;
