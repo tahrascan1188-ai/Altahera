@@ -1832,3 +1832,178 @@ body {
         transform: translateX(4px);
     }
 }
+
+/* ── Weekly Calendar Grid (Doctor Schedules) ── */
+.weekly-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+}
+
+.cal-day-col {
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 150px;
+    transition: box-shadow 0.2s;
+}
+
+.cal-day-col:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.cal-day-col.cal-today {
+    border-color: var(--primary, #661A57);
+    box-shadow: 0 0 0 2px var(--primary, #661A57)33;
+}
+
+.cal-day-header {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-sidebar, #f8f5ff);
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    flex-wrap: wrap;
+}
+
+.cal-today .cal-day-header {
+    background: var(--primary, #661A57);
+    color: #fff;
+}
+
+.cal-day-icon {
+    font-size: 1rem;
+}
+
+.cal-day-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex: 1;
+}
+
+.cal-today-badge {
+    background: #fff3;
+    color: #fff;
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 20px;
+    border: 1px solid #fff6;
+}
+
+.cal-count {
+    background: var(--primary, #661A57);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cal-today .cal-count {
+    background: #fff3;
+    border: 1px solid #fff6;
+}
+
+.cal-cards {
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 80px;
+}
+
+.cal-doc-card {
+    background: var(--bg-main, #f9fafb);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 8px;
+    padding: 0.6rem;
+    font-size: 0.78rem;
+    transition: transform 0.15s;
+}
+
+.cal-doc-card:hover {
+    transform: translateY(-1px);
+}
+
+.cal-doc-name {
+    font-weight: 700;
+    color: var(--primary, #661A57);
+    margin-bottom: 2px;
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cal-doc-specialty {
+    color: var(--text-muted, #6b7280);
+    font-size: 0.72rem;
+    margin-bottom: 4px;
+}
+
+.cal-doc-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #374151;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+}
+
+.cal-doc-status {
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.cal-status-select {
+    width: 100%;
+    padding: 0.25rem 0.4rem;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 6px;
+    font-size: 0.72rem;
+    background: #fff;
+    cursor: pointer;
+}
+
+.cal-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 1rem 0.5rem;
+    color: var(--text-muted, #9ca3af);
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.cal-empty i {
+    font-size: 1.2rem;
+    opacity: 0.4;
+}
+
+/* Responsive calendar */
+@media (max-width: 1200px) {
+    .weekly-calendar-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .weekly-calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .weekly-calendar-grid {
+        grid-template-columns: 1fr;
+    }
+}

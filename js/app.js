@@ -412,31 +412,107 @@ class App {
         const canManageSchedules = this.hasPermission('Manage Schedules');
 
         container.innerHTML = `
-            <div class="view-header flex-between">
-                <h2>جدول الأطباء والمواعيد</h2>
-                <div style="display:flex; gap:0.5rem;">
+            <div class="view-header flex-between" style="margin-bottom:1.5rem;">
+                <div>
+                    <h2 style="margin:0;"><i class="fa-solid fa-calendar-week" style="color:var(--primary);margin-left:0.5rem;"></i> جدول الأطباء الأسبوعي</h2>
+                    <p style="margin:0.25rem 0 0; color:var(--text-muted); font-size:0.9rem;">عرض مواعيد الأطباء حسب أيام الأسبوع</p>
+                </div>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                     ${canManageDoctors ? '<button class="btn btn-primary" onclick="app.showAddDoctorModal()"><i class="fa-solid fa-user-plus"></i> إضافة طبيب</button>' : ''}
                     ${canManageSchedules ? '<button class="btn" style="background:var(--secondary); color:#fff;" onclick="app.showAddScheduleModal()"><i class="fa-solid fa-calendar-plus"></i> إضافة موعد</button>' : ''}
                 </div>
             </div>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>الطبيب</th>
-                            <th>التخصص</th>
-                            <th>اليوم</th>
-                            <th>المواعيد</th>
-                            <th>حالة التواجد</th>
-                            ${canManageSchedules ? '<th>إجراء</th>' : ''}
-                        </tr>
-                    </thead>
-                    <tbody id="doctors-tbody"></tbody>
-                </table>
-            </div>
+            <div id="weekly-calendar" class="weekly-calendar-grid"></div>
         `;
-        this.loadDoctorsSchedules(canManageSchedules);
+        this.loadDoctorsCalendar(canManageSchedules);
     }
+
+    loadDoctorsCalendar(canManageSchedules) {
+        const calendarEl = document.getElementById('weekly-calendar');
+        if (!calendarEl) return;
+
+        const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+        const dayIcons = ['🗓️', '☀️', '🌙', '⭐', '🌿', '🌟', '🕌'];
+
+        let allDoctors = [];
+        if (this.currentUser.branchId === 'all') {
+            allDoctors = storage.getDoctors();
+        } else {
+            allDoctors = storage.getDoctorsByBranch(this.currentUser.branchId);
+        }
+
+        // Build map: day → list of {doc, sch}
+        const dayMap = {};
+        days.forEach(d => dayMap[d] = []);
+
+        allDoctors.forEach(doc => {
+            storage.getSchedulesByDoctor(doc.id).forEach(sch => {
+                if (dayMap[sch.dayOfWeek] !== undefined) {
+                    dayMap[sch.dayOfWeek].push({ doc, sch });
+                }
+            });
+        });
+
+        // Determine today's Arabic day name
+        const todayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const todayAr = todayNames[new Date().getDay()];
+
+        calendarEl.innerHTML = days.map((day, idx) => {
+            const entries = dayMap[day];
+            const isToday = day === todayAr;
+
+            const cardsHtml = entries.length === 0
+                ? `<div class="cal-empty"><i class="fa-regular fa-calendar-xmark"></i><span>لا يوجد</span></div>`
+                : entries.map(({ doc, sch }) => {
+                    let badgeColor = sch.status === 'Available' ? 'var(--success)' : sch.status === 'Excused' ? '#f59e0b' : 'var(--danger)';
+                    let statusText = sch.status === 'Available' ? 'متاح' : sch.status === 'Excused' ? 'معتذر' : 'غير متاح';
+                    let statusIcon = sch.status === 'Available' ? 'fa-circle-check' : sch.status === 'Excused' ? 'fa-circle-exclamation' : 'fa-circle-xmark';
+                    const timeStr = `${this.formatTime(sch.startTime)} — ${this.formatTime(sch.endTime)}`;
+
+                    const selectHtml = canManageSchedules ? `
+                        <select onchange="app.changeDoctorStatus('${sch.id}', this.value)" class="cal-status-select">
+                            <option value="Available" ${sch.status === 'Available' ? 'selected' : ''}>✅ متاح</option>
+                            <option value="Excused" ${sch.status === 'Excused' ? 'selected' : ''}>⚠️ معتذر</option>
+                            <option value="Not Available" ${sch.status === 'Not Available' ? 'selected' : ''}>❌ غير متاح</option>
+                        </select>` : '';
+
+                    return `
+                        <div class="cal-doc-card" style="border-right: 3px solid ${badgeColor};">
+                            <div class="cal-doc-name"><i class="fa-solid fa-user-doctor"></i> ${doc.name}</div>
+                            <div class="cal-doc-specialty">${doc.specialty}</div>
+                            <div class="cal-doc-time"><i class="fa-regular fa-clock"></i> ${timeStr}</div>
+                            <div class="cal-doc-status" style="color:${badgeColor};"><i class="fa-solid ${statusIcon}"></i> ${statusText}</div>
+                            ${selectHtml}
+                        </div>`;
+                }).join('');
+
+            return `
+                <div class="cal-day-col ${isToday ? 'cal-today' : ''}">
+                    <div class="cal-day-header">
+                        <span class="cal-day-icon">${dayIcons[idx]}</span>
+                        <span class="cal-day-name">${day}</span>
+                        ${isToday ? '<span class="cal-today-badge">اليوم</span>' : ''}
+                        <span class="cal-count">${entries.length}</span>
+                    </div>
+                    <div class="cal-cards">${cardsHtml}</div>
+                </div>`;
+        }).join('');
+    }
+
+    loadDoctorsSchedules(canManageSchedules) {
+        // Keep for backward compat - now delegates to calendar
+        this.loadDoctorsCalendar(canManageSchedules);
+    }
+
+    async changeDoctorStatus(scheduleId, newStatus) {
+        if (await storage.updateScheduleStatus(scheduleId, newStatus)) {
+            this.showToast('تم تحديث حالة الطبيب', 'success');
+            this.loadDoctorsCalendar(this.hasPermission('Manage Schedules'));
+        } else {
+            this.showToast('فشل التحديث', 'error');
+        }
+    }
+
 
     formatTime(isoStr) {
         if (!isoStr) return '';
