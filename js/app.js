@@ -488,11 +488,12 @@ class App {
 
             return `
                 <div class="cal-day-col ${isToday ? 'cal-today' : ''}">
-                    <div class="cal-day-header">
+                    <div class="cal-day-header" onclick="app.showDayDetail('${day}')" title="انقر لعرض التفاصيل" style="cursor:pointer;">
                         <span class="cal-day-icon">${dayIcons[idx]}</span>
                         <span class="cal-day-name">${day}</span>
                         ${isToday ? '<span class="cal-today-badge">اليوم</span>' : ''}
                         <span class="cal-count">${entries.length}</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.65rem;opacity:0.5;margin-right:auto;"></i>
                     </div>
                     <div class="cal-cards">${cardsHtml}</div>
                 </div>`;
@@ -508,9 +509,134 @@ class App {
         if (await storage.updateScheduleStatus(scheduleId, newStatus)) {
             this.showToast('تم تحديث حالة الطبيب', 'success');
             this.loadDoctorsCalendar(this.hasPermission('Manage Schedules'));
+            // Refresh day detail if open
+            const panel = document.getElementById('day-detail-overlay');
+            if (panel && panel.dataset.day) this.filterDayDetail(panel.dataset.day);
         } else {
             this.showToast('فشل التحديث', 'error');
         }
+    }
+
+    showDayDetail(day) {
+        const canManageSchedules = this.hasPermission('Manage Schedules');
+        const branches = storage.getBranches();
+        const branchOptions = `<option value="all">كل الفروع</option>` +
+            branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+
+        // Create or reuse overlay
+        let overlay = document.getElementById('day-detail-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'day-detail-overlay';
+            overlay.className = 'day-detail-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.dataset.day = day;
+        overlay.dataset.canManage = canManageSchedules ? '1' : '0';
+
+        overlay.innerHTML = `
+            <div class="day-detail-panel">
+                <div class="day-detail-header">
+                    <div>
+                        <h3 style="margin:0;"><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> جدول يوم ${day}</h3>
+                        <p style="margin:0.2rem 0 0;color:var(--text-muted);font-size:0.85rem;">عرض جميع الأطباء عبر الفروع</p>
+                    </div>
+                    <button onclick="document.getElementById('day-detail-overlay').remove()" class="btn" style="padding:0.4rem 0.8rem;"><i class="fa-solid fa-xmark"></i> إغلاق</button>
+                </div>
+                <div class="day-detail-filters">
+                    <div class="day-filter-group">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="day-search-doc" placeholder="ابحث باسم الطبيب..." oninput="app.filterDayDetail('${day}')">
+                    </div>
+                    <div class="day-filter-group">
+                        <i class="fa-solid fa-building"></i>
+                        <select id="day-filter-branch" onchange="app.filterDayDetail('${day}')">
+                            ${branchOptions}
+                        </select>
+                    </div>
+                    <div class="day-filter-group">
+                        <i class="fa-solid fa-circle-half-stroke"></i>
+                        <select id="day-filter-status" onchange="app.filterDayDetail('${day}')">
+                            <option value="all">كل الحالات</option>
+                            <option value="Available">✅ متاح</option>
+                            <option value="Excused">⚠️ معتذر</option>
+                            <option value="Not Available">❌ غير متاح</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="day-detail-cards" class="day-detail-cards"></div>
+            </div>
+        `;
+        overlay.style.display = 'flex';
+        this.filterDayDetail(day);
+
+        // Close on backdrop click
+        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    }
+
+    filterDayDetail(day) {
+        const canManage = document.getElementById('day-detail-overlay')?.dataset.canManage === '1';
+        const searchVal = (document.getElementById('day-search-doc')?.value || '').toLowerCase();
+        const branchVal = document.getElementById('day-filter-branch')?.value || 'all';
+        const statusVal = document.getElementById('day-filter-status')?.value || 'all';
+        const cardsEl = document.getElementById('day-detail-cards');
+        if (!cardsEl) return;
+
+        let allDoctors = storage.getDoctors();
+        if (branchVal !== 'all') allDoctors = allDoctors.filter(d => d.branchId === branchVal);
+        if (searchVal) allDoctors = allDoctors.filter(d => d.name.toLowerCase().includes(searchVal) || (d.specialty || '').toLowerCase().includes(searchVal));
+
+        let entries = [];
+        allDoctors.forEach(doc => {
+            storage.getSchedulesByDoctor(doc.id).forEach(sch => {
+                if (sch.dayOfWeek === day) {
+                    if (statusVal === 'all' || sch.status === statusVal) {
+                        entries.push({ doc, sch });
+                    }
+                }
+            });
+        });
+
+        if (entries.length === 0) {
+            cardsEl.innerHTML = `<div class="day-no-results"><i class="fa-regular fa-calendar-xmark"></i><p>لا يوجد أطباء بهذه المعايير في يوم ${day}</p></div>`;
+            return;
+        }
+
+        cardsEl.innerHTML = entries.map(({ doc, sch }) => {
+            const branch = storage.getBranchById(doc.branchId);
+            const branchName = branch ? branch.name : doc.branchId;
+            const badgeColor = sch.status === 'Available' ? 'var(--success)' : sch.status === 'Excused' ? '#f59e0b' : 'var(--danger)';
+            const statusText = sch.status === 'Available' ? 'متاح' : sch.status === 'Excused' ? 'معتذر' : 'غير متاح';
+            const statusIcon = sch.status === 'Available' ? 'fa-circle-check' : sch.status === 'Excused' ? 'fa-circle-exclamation' : 'fa-circle-xmark';
+            const timeStr = `${this.formatTime(sch.startTime)} — ${this.formatTime(sch.endTime)}`;
+
+            const selectHtml = canManage ? `
+                <select onchange="app.changeDoctorStatus('${sch.id}', this.value)" class="day-status-select">
+                    <option value="Available" ${sch.status === 'Available' ? 'selected' : ''}>✅ متاح</option>
+                    <option value="Excused" ${sch.status === 'Excused' ? 'selected' : ''}>⚠️ معتذر</option>
+                    <option value="Not Available" ${sch.status === 'Not Available' ? 'selected' : ''}>❌ غير متاح</option>
+                </select>` : '';
+
+            return `
+                <div class="day-doc-card" style="border-right:4px solid ${badgeColor};">
+                    <div class="day-doc-main">
+                        <div class="day-doc-avatar" style="background:${badgeColor}22;color:${badgeColor};">
+                            <i class="fa-solid fa-user-doctor"></i>
+                        </div>
+                        <div class="day-doc-info">
+                            <div class="day-doc-name">${doc.name}</div>
+                            <div class="day-doc-meta">${doc.specialty} &nbsp;·&nbsp; <i class="fa-solid fa-location-dot"></i> فرع ${branchName}</div>
+                            <div class="day-doc-time"><i class="fa-regular fa-clock"></i> ${timeStr}</div>
+                        </div>
+                        <div class="day-doc-status-col">
+                            <span class="day-status-badge" style="background:${badgeColor}22;color:${badgeColor};">
+                                <i class="fa-solid ${statusIcon}"></i> ${statusText}
+                            </span>
+                            ${selectHtml}
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
     }
 
 
@@ -532,7 +658,7 @@ class App {
         }
     }
 
-    loadDoctorsSchedules(canManageSchedules) {
+    loadDoctorsSchedules_LEGACY(canManageSchedules) {
         const tbody = document.getElementById('doctors-tbody');
         if (!tbody) return;
         tbody.innerHTML = '';

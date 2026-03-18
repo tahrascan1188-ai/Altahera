@@ -2007,3 +2007,226 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Day Detail Overlay ── */
+.day-detail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+    animation: fadeIn 0.2s ease;
+}
+
+.day-detail-panel {
+    background: var(--bg-card, #fff);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 860px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.day-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary, #661A57), var(--secondary, #8B2E78));
+    color: #fff;
+}
+
+.day-detail-header h3,
+.day-detail-header p {
+    color: #fff;
+}
+
+.day-detail-header .btn {
+    background: #ffffff22;
+    color: #fff;
+    border: 1px solid #ffffff44;
+}
+
+.day-detail-header .btn:hover {
+    background: #ffffff33;
+}
+
+.day-detail-filters {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-sidebar, #f9fafb);
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    flex-wrap: wrap;
+}
+
+.day-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    flex: 1;
+    min-width: 160px;
+}
+
+.day-filter-group i {
+    color: var(--text-muted, #9ca3af);
+    font-size: 0.85rem;
+}
+
+.day-filter-group input,
+.day-filter-group select {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.85rem;
+    width: 100%;
+    font-family: inherit;
+    color: var(--text-main, #111827);
+}
+
+.day-detail-cards {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.day-doc-card {
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 10px;
+    padding: 1rem;
+    transition: box-shadow 0.15s;
+    background: var(--bg-main, #f9fafb);
+}
+
+.day-doc-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
+
+.day-doc-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.day-doc-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.day-doc-info {
+    flex: 1;
+}
+
+.day-doc-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-main, #111827);
+    margin-bottom: 2px;
+}
+
+.day-doc-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted, #6b7280);
+    margin-bottom: 3px;
+}
+
+.day-doc-time {
+    font-size: 0.82rem;
+    color: var(--text-main, #374151);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.day-doc-status-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
+}
+
+.day-status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.day-status-select {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    background: #fff;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.day-no-results {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted, #9ca3af);
+}
+
+.day-no-results i {
+    font-size: 2.5rem;
+    opacity: 0.3;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.day-no-results p {
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .day-detail-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    .day-detail-panel {
+        border-radius: 16px 16px 0 0;
+        max-height: 90vh;
+    }
+
+    .day-doc-main {
+        flex-wrap: wrap;
+    }
+
+    .day-doc-status-col {
+        align-items: flex-start;
+    }
+}
