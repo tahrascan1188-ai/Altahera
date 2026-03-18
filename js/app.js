@@ -411,20 +411,82 @@ class App {
         const canManageDoctors = this.hasPermission('Manage Doctors');
         const canManageSchedules = this.hasPermission('Manage Schedules');
 
+        if (!this.calendarCurrentDate) {
+            this.calendarCurrentDate = new Date();
+        }
+        if (!this.calendarBranchFilter) {
+            this.calendarBranchFilter = this.currentUser.branchId === 'all' ? 'all' : this.currentUser.branchId;
+        }
+
+        const branches = storage.getBranches();
+        const branchOpts = `<option value="all">كل الفروع</option>` +
+            branches.map(b => `<option value="${b.id}" ${this.calendarBranchFilter === b.id ? 'selected' : ''}>${b.name}</option>`).join('');
+
+        const isCallCenterOrAdmin = this.currentUser.branchId === 'all';
+
         container.innerHTML = `
             <div class="view-header flex-between" style="margin-bottom:1.5rem;">
                 <div>
                     <h2 style="margin:0;"><i class="fa-solid fa-calendar-week" style="color:var(--primary);margin-left:0.5rem;"></i> جدول الأطباء الأسبوعي</h2>
-                    <p style="margin:0.25rem 0 0; color:var(--text-muted); font-size:0.9rem;">عرض مواعيد الأطباء حسب أيام الأسبوع</p>
+                    <p style="margin:0.25rem 0 0; color:var(--text-muted); font-size:0.9rem;">عرض مواعيد الأطباء لتواريخ حقيقية</p>
                 </div>
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                     ${canManageDoctors ? '<button class="btn btn-primary" onclick="app.showAddDoctorModal()"><i class="fa-solid fa-user-plus"></i> إضافة طبيب</button>' : ''}
                     ${canManageSchedules ? '<button class="btn" style="background:var(--secondary); color:#fff;" onclick="app.showAddScheduleModal()"><i class="fa-solid fa-calendar-plus"></i> إضافة موعد</button>' : ''}
                 </div>
             </div>
+
+            <div class="calendar-toolbar">
+                <div class="cal-nav-group">
+                    <button class="btn btn-icon" title="الأسبوع السابق" onclick="app.prevWeek()"><i class="fa-solid fa-chevron-right"></i></button>
+                    <div id="calendar-week-label" class="cal-week-label">جاري الحساب...</div>
+                    <button class="btn btn-icon" title="الأسبوع التالي" onclick="app.nextWeek()"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="btn btn-outline" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="app.jumpToToday()">اليوم</button>
+                </div>
+                ${isCallCenterOrAdmin ? `
+                <div class="cal-filter-group">
+                    <i class="fa-solid fa-building" style="color:var(--text-muted);"></i>
+                    <select id="calendar-branch-filter" onchange="app.calendarBranchFilter = this.value; app.loadDoctorsCalendar(${canManageSchedules});">
+                        ${branchOpts}
+                    </select>
+                </div>` : ''}
+            </div>
+
             <div id="weekly-calendar" class="weekly-calendar-grid"></div>
         `;
         this.loadDoctorsCalendar(canManageSchedules);
+    }
+
+    getWeekDaysForCalendar(baseDate) {
+        const date = new Date(baseDate);
+        const dayInfo = date.getDay(); // 0: Sun, 1: Mon, ..., 6: Sat
+        const diffToSat = dayInfo === 6 ? 0 : -(dayInfo + 1);
+
+        const saturday = new Date(date);
+        saturday.setDate(date.getDate() + diffToSat);
+
+        const weekDays = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(saturday);
+            d.setDate(saturday.getDate() + i);
+            weekDays.push(d);
+        }
+        return weekDays;
+    }
+
+    prevWeek() {
+        this.calendarCurrentDate.setDate(this.calendarCurrentDate.getDate() - 7);
+        this.loadDoctorsCalendar(this.hasPermission('Manage Schedules'));
+    }
+
+    nextWeek() {
+        this.calendarCurrentDate.setDate(this.calendarCurrentDate.getDate() + 7);
+        this.loadDoctorsCalendar(this.hasPermission('Manage Schedules'));
+    }
+
+    jumpToToday() {
+        this.calendarCurrentDate = new Date();
+        this.loadDoctorsCalendar(this.hasPermission('Manage Schedules'));
     }
 
     loadDoctorsCalendar(canManageSchedules) {
@@ -433,12 +495,21 @@ class App {
 
         const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
         const dayIcons = ['🗓️', '☀️', '🌙', '⭐', '🌿', '🌟', '🕌'];
+        const weekDates = this.getWeekDaysForCalendar(this.calendarCurrentDate);
+
+        // Update the week label (e.g., 20 Nov - 26 Nov)
+        const labelEl = document.getElementById('calendar-week-label');
+        if (labelEl) {
+            const d1Options = { day: 'numeric', month: 'short' };
+            const d2Options = { day: 'numeric', month: 'short', year: 'numeric' };
+            labelEl.textContent = `${weekDates[0].toLocaleDateString('ar-EG', d1Options)} - ${weekDates[6].toLocaleDateString('ar-EG', d2Options)}`;
+        }
 
         let allDoctors = [];
-        if (this.currentUser.branchId === 'all') {
+        if (this.calendarBranchFilter === 'all') {
             allDoctors = storage.getDoctors();
         } else {
-            allDoctors = storage.getDoctorsByBranch(this.currentUser.branchId);
+            allDoctors = storage.getDoctorsByBranch(this.calendarBranchFilter);
         }
 
         // Build map: day → list of {doc, sch}
@@ -453,16 +524,17 @@ class App {
             });
         });
 
-        // Determine today's Arabic day name
-        const todayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const todayAr = todayNames[new Date().getDay()];
+        // Determine today's actual date string to highlight the current day
+        const todayStr = new Date().toDateString();
 
         calendarEl.innerHTML = days.map((day, idx) => {
             const entries = dayMap[day];
-            const isToday = day === todayAr;
+            const colDate = weekDates[idx];
+            const isToday = colDate.toDateString() === todayStr;
+            const dateStr = `${colDate.getDate()}/${colDate.getMonth() + 1}`;
 
             const cardsHtml = entries.length === 0
-                ? `<div class="cal-empty"><i class="fa-regular fa-calendar-xmark"></i><span>لا يوجد</span></div>`
+                ? `<div class="cal-empty"><i class="fa-regular fa-calendar-xmark"></i><span>لا يوجد أطباء</span></div>`
                 : entries.map(({ doc, sch }) => {
                     let badgeColor = sch.status === 'Available' ? 'var(--success)' : sch.status === 'Excused' ? '#f59e0b' : 'var(--danger)';
                     let statusText = sch.status === 'Available' ? 'متاح' : sch.status === 'Excused' ? 'معتذر' : 'غير متاح';
@@ -488,12 +560,15 @@ class App {
 
             return `
                 <div class="cal-day-col ${isToday ? 'cal-today' : ''}">
-                    <div class="cal-day-header" onclick="app.showDayDetail('${day}')" title="انقر لعرض التفاصيل" style="cursor:pointer;">
+                    <div class="cal-day-header" onclick="app.showDayDetail('${day}', '${colDate.toISOString()}')" title="انقر لعرض التفاصيل" style="cursor:pointer;">
                         <span class="cal-day-icon">${dayIcons[idx]}</span>
-                        <span class="cal-day-name">${day}</span>
+                        <div style="display:flex; flex-direction:column; margin-right:4px;">
+                            <span class="cal-day-name" style="font-size:0.8rem;line-height:1;">${day}</span>
+                            <span style="font-size:0.65rem; opacity:0.8; font-weight:600;">${dateStr}</span>
+                        </div>
                         ${isToday ? '<span class="cal-today-badge">اليوم</span>' : ''}
-                        <span class="cal-count">${entries.length}</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.65rem;opacity:0.5;margin-right:auto;"></i>
+                        <span class="cal-count" style="margin-right:auto; margin-left:4px;">${entries.length}</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.65rem;opacity:0.5;"></i>
                     </div>
                     <div class="cal-cards">${cardsHtml}</div>
                 </div>`;
@@ -517,11 +592,17 @@ class App {
         }
     }
 
-    showDayDetail(day) {
+    showDayDetail(day, isoDateStr) {
         const canManageSchedules = this.hasPermission('Manage Schedules');
         const branches = storage.getBranches();
         const branchOptions = `<option value="all">كل الفروع</option>` +
             branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+
+        let dateTitle = '';
+        if (isoDateStr) {
+            const d = new Date(isoDateStr);
+            dateTitle = `<span style="font-size:0.85em; opacity:0.85; font-weight:500;">(${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()})</span>`;
+        }
 
         // Create or reuse overlay
         let overlay = document.getElementById('day-detail-overlay');
@@ -538,7 +619,7 @@ class App {
             <div class="day-detail-panel">
                 <div class="day-detail-header">
                     <div>
-                        <h3 style="margin:0;"><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> جدول يوم ${day}</h3>
+                        <h3 style="margin:0;"><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> جدول يوم ${day} ${dateTitle}</h3>
                         <p style="margin:0.2rem 0 0;color:var(--text-muted);font-size:0.85rem;">عرض جميع الأطباء عبر الفروع</p>
                     </div>
                     <button onclick="document.getElementById('day-detail-overlay').remove()" class="btn" style="padding:0.4rem 0.8rem;"><i class="fa-solid fa-xmark"></i> إغلاق</button>

@@ -1833,7 +1833,54 @@ body {
     }
 }
 
-/* ── Weekly Calendar Grid (Doctor Schedules) ── */
+/* ── Weekly Calendar Grid & Toolbar ── */
+.calendar-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    background: var(--bg-card, #fff);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border, #e5e7eb);
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.cal-nav-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cal-week-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--primary, #661A57);
+    min-width: 140px;
+    text-align: center;
+}
+
+.cal-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-sidebar, #f9fafb);
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border, #e5e7eb);
+}
+
+.cal-filter-group select {
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-main, #111827);
+    outline: none;
+    cursor: pointer;
+}
+
 .weekly-calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
