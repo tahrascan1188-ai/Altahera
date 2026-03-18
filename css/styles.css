@@ -593,6 +593,53 @@ body {
 /* -------------------------------------
    Views Specific Styles
 -------------------------------------- */
+/* ── Data Tables ── */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+    /* Forces scroll on mobile */
+    text-align: right;
+}
+
+.data-table th,
+.data-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+    background: var(--bg-main);
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.data-table tbody tr {
+    transition: background 0.2s;
+}
+
+.data-table tbody tr:hover {
+    background-color: rgba(102, 26, 87, 0.03);
+}
+
+.data-table td {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
 .view-header {
     margin-bottom: 2rem;
 }
