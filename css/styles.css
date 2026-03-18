@@ -2036,7 +2036,7 @@ body {
     opacity: 0.4;
 }
 
-/* Responsive calendar */
+/* Responsive calendar & Toolbar */
 @media (max-width: 1200px) {
     .weekly-calendar-grid {
         grid-template-columns: repeat(4, 1fr);
@@ -2047,11 +2047,41 @@ body {
     .weekly-calendar-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .calendar-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .cal-nav-group {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .cal-filter-group {
+        justify-content: center;
+    }
 }
 
 @media (max-width: 480px) {
     .weekly-calendar-grid {
         grid-template-columns: 1fr;
+    }
+
+    .cal-nav-group .btn-icon {
+        padding: 0.4rem;
+    }
+
+    .cal-week-label {
+        font-size: 0.85rem;
+        min-width: 110px;
+    }
+
+    .view-header.flex-between {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
     }
 }
 
