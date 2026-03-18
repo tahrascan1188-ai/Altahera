@@ -63,17 +63,13 @@ const initialUsers = [
 
 // Seed function
 function seedInitialData(storageManager) {
-    if (!localStorage.getItem('altahera_seeded_v5')) {
+    if (!localStorage.getItem('altahera_seeded_v6')) {
         storageManager.saveLocalCache('branches', initialBranches);
-        storageManager.saveLocalCache('devices', initialDevices);
-        storageManager.saveLocalCache('tests', initialTests);
-        storageManager.saveLocalCache('doctors', initialDoctors);
-        storageManager.saveLocalCache('schedules', initialSchedules);
-        // Do NOT overwrite users if they already exist, but seed admins initially
-        const existingUsers = storageManager.getUsers();
-        if (existingUsers.length === 0) {
-            storageManager.saveLocalCache('users', initialUsers);
-        }
-        localStorage.setItem('altahera_seeded_v5', 'true');
+        // Always reset users to ensure correct credentials
+        storageManager.saveLocalCache('users', initialUsers);
+        localStorage.setItem('altahera_seeded_v6', 'true');
+        // Clear old seed keys
+        localStorage.removeItem('altahera_seeded_v5');
+        localStorage.removeItem('altahera_seeded_v4');
     }
 }
