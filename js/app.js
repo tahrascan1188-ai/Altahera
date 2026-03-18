@@ -732,9 +732,11 @@ class App {
     // --- Manage Tests View ---
     renderManageTestsView(container) {
         const canEdit = this.hasPermission('Edit Tests');
+        const canAdd = this.hasPermission('Add Tests');
         container.innerHTML = `
             <div class="view-header flex-between">
                 <h2>إدارة التحاليل والأشعة</h2>
+                ${canAdd ? '<button class="btn btn-primary" onclick="app.showAddTestModal()"><i class="fa-solid fa-plus"></i> إضافة فحص جديد</button>' : ''}
             </div>
             <div class="table-responsive">
                 <table class="data-table">
@@ -752,6 +754,73 @@ class App {
             </div>
         `;
         this.loadManageTests(canEdit);
+    }
+
+    showAddTestModal() {
+        const bodyHtml = `
+            <div class="form-group-modal">
+                <label>الاسم بالعربية</label>
+                <input type="text" id="modal-new-test-namear" placeholder="مثال: صورة دم كاملة">
+            </div>
+            <div class="form-group-modal">
+                <label>الاسم بالإنجليزية</label>
+                <input type="text" id="modal-new-test-nameen" placeholder="مثال: CBC">
+            </div>
+            <div class="form-group-modal">
+                <label>النوع</label>
+                <select id="modal-new-test-category">
+                    <option value="Laboratory">تحليل معملي</option>
+                    <option value="Radiology">أشعة</option>
+                </select>
+            </div>
+            <div class="form-group-modal">
+                <label>السعر (ج.م)</label>
+                <input type="number" id="modal-new-test-price" placeholder="مثال: 150">
+            </div>
+            <div class="form-group-modal">
+                <label>التعليمات (اختياري)</label>
+                <input type="text" id="modal-new-test-instructions" placeholder="مثال: صيام 8 ساعات">
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background:var(--border-color);" onclick="app.closeModal()">إلغاء</button>
+                <button class="btn btn-primary" onclick="app.submitAddTest()">إضافة الفحص</button>
+            </div>
+        `;
+        this.openModal('إضافة فحص جديد', bodyHtml);
+    }
+
+    async submitAddTest() {
+        const nameAr = document.getElementById('modal-new-test-namear').value.trim();
+        const nameEn = document.getElementById('modal-new-test-nameen').value.trim();
+        const category = document.getElementById('modal-new-test-category').value;
+        const price = parseFloat(document.getElementById('modal-new-test-price').value);
+        const instructions = document.getElementById('modal-new-test-instructions').value.trim();
+
+        if (!nameAr || isNaN(price)) {
+            this.showToast('الرجاء تعبئة الاسم والسعر بشكل صحيح', 'error');
+            return;
+        }
+
+        const newTestId = 'test_' + Date.now();
+        const testData = {
+            id: newTestId,
+            nameAr: nameAr,
+            nameEn: nameEn,
+            category: category,
+            price: price,
+            instructions: instructions || 'لا توجد',
+            deviceId: '', // Usually assigned later or specific devices
+            specificDays: '',
+            allWeek: true
+        };
+
+        if (await storage.addTest(testData)) {
+            this.showToast('تمت إضافة الفحص بنجاح', 'success');
+            this.loadManageTests(this.hasPermission('Edit Tests'));
+            this.closeModal();
+        } else {
+            this.showToast('حدث خطأ أثناء الإضافة', 'error');
+        }
     }
 
     loadManageTests(canEdit) {
