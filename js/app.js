@@ -1009,6 +1009,20 @@ class App {
     }
 
     showAddUserModal() {
+        const branches = storage.getBranches();
+        const branchOpts = `<option value="all">كل الفروع (مدير عام/كول سنتر)</option>` + branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+
+        const permLabels = {
+            'View Tests': 'عرض الفحوصات', 'Add Tests': 'إضافة فحص', 'Edit Tests': 'تعديل الفحوصات', 'Delete Tests': 'حذف فحص',
+            'View Devices': 'عرض الأجهزة', 'Manage Devices': 'إدارة الأجهزة',
+            'View Doctors': 'عرض الأطباء', 'Manage Doctors': 'إدارة الأطباء',
+            'Manage Schedules': 'إدارة المواعيد', 'Manage Users': 'إدارة المستخدمين'
+        };
+
+        const permsHtml = Object.keys(permLabels).map(p =>
+            `<label class="checkbox-group" style="display:inline-flex; width:48%; align-items:center;"><input type="checkbox" class="modal-perm-cb" value="${p}"> ${permLabels[p]}</label>`
+        ).join('');
+
         const bodyHtml = `
             <div class="form-group-modal">
                 <label>الاسم</label>
@@ -1018,14 +1032,19 @@ class App {
                 <label>البريد الإلكتروني (اسم مستخدم الدخول)</label>
                 <input type="text" id="modal-user-email" placeholder="مثال: user.name">
             </div>
-            <div class="form-group-modal">
-                <label>الدور</label>
-                <input type="text" id="modal-user-role" placeholder="مثال: Reception, Manager" value="Employee">
+            <div style="display:flex; gap:1rem;">
+                <div class="form-group-modal" style="flex:1;">
+                    <label>الدور</label>
+                    <input type="text" id="modal-user-role" placeholder="مثال: Reception" value="Employee">
+                </div>
+                <div class="form-group-modal" style="flex:1;">
+                    <label>تعيين الفرع</label>
+                    <select id="modal-user-branch">${branchOpts}</select>
+                </div>
             </div>
             <div class="form-group-modal">
-                <label>الصلاحيات المبدئية</label>
-                <label class="checkbox-group"><input type="checkbox" id="modal-perm-tests"> عرض التحاليل والمواعيد</label>
-                <label class="checkbox-group"><input type="checkbox" id="modal-perm-devices"> أجهزة الفروع (Global Devices)</label>
+                <label style="margin-bottom:0.5rem; display:block;">الصلاحيات:</label>
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">${permsHtml}</div>
             </div>
             <div class="modal-footer">
                 <button class="btn" style="background:var(--border-color);" onclick="app.closeModal()">إلغاء</button>
@@ -1039,17 +1058,14 @@ class App {
         const name = document.getElementById('modal-user-name').value.trim();
         const email = document.getElementById('modal-user-email').value.trim();
         const role = document.getElementById('modal-user-role').value.trim();
-        const pTests = document.getElementById('modal-perm-tests').checked;
-        const pDevices = document.getElementById('modal-perm-devices').checked;
+        const branchId = document.getElementById('modal-user-branch').value;
+
+        const perms = Array.from(document.querySelectorAll('.modal-perm-cb')).filter(cb => cb.checked).map(cb => cb.value);
 
         if (!name || !email) {
             this.showToast('يجب إدخال الاسم والبريد الإلكتروني', 'error');
             return;
         }
-
-        let perms = [];
-        if (pTests) perms.push("View Tests");
-        if (pDevices) perms.push("Manage Devices");
 
         const btn = document.querySelector('.modal-footer .btn-primary');
         const origText = btn.innerHTML;
@@ -1060,14 +1076,14 @@ class App {
             name: name,
             email: email,
             password: '123',
-            branchId: this.currentUser.branchId === 'all' ? 'b1' : this.currentUser.branchId, // Default to their own branch
+            branchId: branchId,
             role: role,
             status: 'Active',
             permissions: perms
         });
 
         if (res) {
-            this.showToast('تم الإضافة بكلمة مرور 123', 'success');
+            this.showToast('تم الإضافة بنجاح (الباسورد الافتراضي: 123)', 'success');
             this.loadUsersTable();
             this.closeModal();
         } else {
@@ -1081,33 +1097,74 @@ class App {
         const user = storage.getUserById(userId);
         if (!user) return;
 
+        const branches = storage.getBranches();
+        const branchOpts = `<option value="all" ${user.branchId === 'all' ? 'selected' : ''}>كل الفروع (مدير عام/كول سنتر)</option>` +
+            branches.map(b => `<option value="${b.id}" ${user.branchId === b.id ? 'selected' : ''}>${b.name}</option>`).join('');
+
+        const permLabels = {
+            'View Tests': 'عرض الفحوصات', 'Add Tests': 'إضافة فحص', 'Edit Tests': 'تعديل الفحوصات', 'Delete Tests': 'حذف فحص',
+            'View Devices': 'عرض الأجهزة', 'Manage Devices': 'إدارة الأجهزة',
+            'View Doctors': 'عرض الأطباء', 'Manage Doctors': 'إدارة الأطباء',
+            'Manage Schedules': 'إدارة المواعيد', 'Manage Users': 'إدارة المستخدمين'
+        };
+
+        const userPerms = typeof user.permissions === 'string' ? JSON.parse(user.permissions || '[]') : (user.permissions || []);
+
+        const permsHtml = Object.keys(permLabels).map(p => {
+            const isChecked = userPerms.includes(p) ? 'checked' : '';
+            return `<label class="checkbox-group" style="display:inline-flex; width:48%; align-items:center;"><input type="checkbox" class="modal-perm-cb-edit" value="${p}" ${isChecked}> ${permLabels[p]}</label>`;
+        }).join('');
+
         const bodyHtml = `
+            <div style="display:flex; gap:1rem;">
+                <div class="form-group-modal" style="flex:1;">
+                    <label>الدور / الوظيفة</label>
+                    <input type="text" id="modal-edit-role" value="${user.role}">
+                </div>
+                <div class="form-group-modal" style="flex:1;">
+                    <label>الفرع المعين</label>
+                    <select id="modal-edit-branch">${branchOpts}</select>
+                </div>
+            </div>
             <div class="form-group-modal">
-                <label>الدور / الوظيفة</label>
-                <input type="text" id="modal-edit-role" value="${user.role}">
+                <label style="margin-bottom:0.5rem; display:block;">تعديل الصلاحيات:</label>
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">${permsHtml}</div>
             </div>
             <div class="modal-footer">
                 <button class="btn" style="background:var(--border-color);" onclick="app.closeModal()">إلغاء</button>
-                <button class="btn btn-primary" onclick="app.submitEditRole('${user.id}')">تحديث</button>
+                <button class="btn btn-primary" onclick="app.submitEditUser('${user.id}')">تحديث تفاصيل المستخدم</button>
             </div>
         `;
-        this.openModal(`تعديل دور: ${user.name}`, bodyHtml);
+        this.openModal(`تعديل المستخدم: ${user.name}`, bodyHtml);
     }
 
-    async submitEditRole(userId) {
+    async submitEditUser(userId) {
         const user = storage.getUserById(userId);
         if (!user) return;
 
         const newRole = document.getElementById('modal-edit-role').value.trim();
+        const newBranchId = document.getElementById('modal-edit-branch').value;
+        const newPerms = Array.from(document.querySelectorAll('.modal-perm-cb-edit')).filter(cb => cb.checked).map(cb => cb.value);
+
         if (newRole) {
             user.role = newRole;
+            user.branchId = newBranchId;
+            user.permissions = newPerms;
+
+            const btn = document.querySelector('.modal-footer .btn-primary');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.disabled = true;
+
             const res = await storage.updateUser(user);
             if (res) {
-                this.showToast('تم تحديث الدور بنجاح', 'success');
+                this.showToast('تم تحديث تفاصيل المستخدم بنجاح', 'success');
                 this.loadUsersTable();
                 this.closeModal();
             } else {
-                this.showToast('حدث خطأ', 'error');
+                this.showToast('حدث خطأ أثناء التحديث', 'error');
+                btn.innerHTML = origText;
+                btn.disabled = false;
             }
         }
     }
