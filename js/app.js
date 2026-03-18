@@ -37,35 +37,41 @@ class App {
     }
 
     async loginWithEmail() {
-        const email = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value;
+        try {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
 
-        if (!email || !password) {
-            if (window.setLoginStatus) setLoginStatus('error', 'fa-triangle-exclamation', 'الرجاء إدخال اسم المستخدم وكلمة المرور');
-            return;
-        }
+            console.log('🔑 Login attempt:', email, '| pass length:', password.length);
 
-        const user = storage.getUserByEmail(email);
-        if (user && String(user.password) === String(password)) {
-            if (user.status !== 'Active') {
-                if (window.setLoginStatus) setLoginStatus('error', 'fa-ban', 'هذا الحساب معطل — يرجى مراجعة الإدارة');
+            if (!email || !password) {
+                if (window.setLoginStatus) setLoginStatus('error', 'fa-triangle-exclamation', 'الرجاء إدخال اسم المستخدم وكلمة المرور');
                 return;
             }
 
-            // Save to localStorage
-            localStorage.setItem('altahera_session_user', JSON.stringify({ email: user.email, password: user.password }));
+            const user = storage.getUserByEmail(email);
+            console.log('👤 User found:', user ? user.email : 'NULL', '| pass type:', user ? typeof user.password : 'N/A');
 
-            if (window.setLoginStatus) setLoginStatus('success', 'fa-check-circle', `مرحباً ${user.name} — جاري الدخول...`);
-            setTimeout(() => {
-                if (window.clearLoginStatus) clearLoginStatus();
+            if (user && String(user.password) === String(password)) {
+                if (user.status !== 'Active') {
+                    if (window.setLoginStatus) setLoginStatus('error', 'fa-ban', 'هذا الحساب معطل — يرجى مراجعة الإدارة');
+                    return;
+                }
+
+                localStorage.setItem('altahera_session_user', JSON.stringify({ email: user.email, password: user.password }));
+
+                if (window.setLoginStatus) setLoginStatus('success', 'fa-check-circle', `مرحباً ${user.name} — جاري الدخول...`);
+
+                // Apply login immediately
                 this.applyLoginState(user);
-                this.showToast(`مرحباً ${user.name} في فرع ${this.currentUser.branchName}`, 'success');
-            }, 600);
-        } else {
-            if (window.setLoginStatus) setLoginStatus('error', 'fa-circle-xmark', 'اسم المستخدم أو كلمة المرور غير صحيحة');
-            // Shake the inputs
-            const fields = document.querySelectorAll('.neon-field');
-            fields.forEach(f => { f.style.animation = 'shake 0.4s ease'; setTimeout(() => f.style.animation = '', 400); });
+                this.showToast(`مرحباً ${user.name}`, 'success');
+            } else {
+                if (window.setLoginStatus) setLoginStatus('error', 'fa-circle-xmark', 'اسم المستخدم أو كلمة المرور غير صحيحة');
+                const fields = document.querySelectorAll('.neon-field');
+                fields.forEach(f => { f.style.animation = 'shake 0.4s ease'; setTimeout(() => f.style.animation = '', 400); });
+            }
+        } catch (err) {
+            console.error('❌ Login error:', err);
+            if (window.setLoginStatus) setLoginStatus('error', 'fa-triangle-exclamation', 'خطأ: ' + err.message);
         }
     }
 
