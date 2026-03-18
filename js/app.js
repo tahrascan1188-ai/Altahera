@@ -1109,4 +1109,4 @@ class App {
     }
 }
 
-const app = new App();
+window.app = new App();

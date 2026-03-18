@@ -282,4 +282,4 @@ class StorageManager {
     }
 }
 
-const storage = new StorageManager();
+window.storage = new StorageManager();
