@@ -25,7 +25,7 @@ class App {
                 const savedUser = JSON.parse(savedUserStr);
                 // Validate if user still exists/active in DB
                 const dbUser = storage.getUserByEmail(savedUser.email);
-                if (dbUser && dbUser.password === savedUser.password && dbUser.status === 'Active') {
+                if (dbUser && String(dbUser.password) === String(savedUser.password) && dbUser.status === 'Active') {
                     this.applyLoginState(dbUser);
                 } else {
                     localStorage.removeItem('altahera_session_user');
@@ -46,7 +46,7 @@ class App {
         }
 
         const user = storage.getUserByEmail(email);
-        if (user && user.password === password) {
+        if (user && String(user.password) === String(password)) {
             if (user.status !== 'Active') {
                 if (window.setLoginStatus) setLoginStatus('error', 'fa-ban', 'هذا الحساب معطل — يرجى مراجعة الإدارة');
                 return;
