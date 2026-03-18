@@ -438,6 +438,24 @@ class App {
         this.loadDoctorsSchedules(canManageSchedules);
     }
 
+    formatTime(isoStr) {
+        if (!isoStr) return '';
+        // Handle ISO-like string from Google Sheets (e.g. 1899-12-30T06:54:51.000Z)
+        try {
+            const date = new Date(isoStr);
+            if (isNaN(date.getTime())) return isoStr; // Return raw if invalid
+
+            let hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+        } catch (e) {
+            return isoStr;
+        }
+    }
+
     loadDoctorsSchedules(canManageSchedules) {
         const tbody = document.getElementById('doctors-tbody');
         if (!tbody) return;
@@ -468,6 +486,7 @@ class App {
                 else statusBadge = 'badge-danger';
 
                 const statusText = sch.status === 'Available' ? 'متاح' : (sch.status === 'Excused' ? 'معتذر' : 'غير متاح');
+                const timeStr = `${this.formatTime(sch.startTime)} - ${this.formatTime(sch.endTime)}`;
 
                 let managerTd = '';
                 if (canManageSchedules) {
@@ -486,7 +505,7 @@ class App {
                     <td><div class="doc-name"><i class="fa-solid fa-user-md"></i> ${doc.name}</div></td>
                     <td>${doc.specialty}</td>
                     <td><strong>${sch.dayOfWeek}</strong></td>
-                    <td>${sch.startTime} - ${sch.endTime}</td>
+                    <td>${timeStr}</td>
                     <td><span class="badge ${statusBadge}">${statusText}</span></td>
                     ${managerTd}
                 `;
