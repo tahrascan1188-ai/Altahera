@@ -105,38 +105,41 @@
                         <div class="panel-divider"></div>
                     </div>
 
-                    <!-- Username -->
-                    <div class="neon-field" id="field-user">
-                        <i class="fa-solid fa-user field-icon"></i>
-                        <input type="text" id="login-email" class="neon-input" placeholder=" " autocomplete="username"
-                            dir="ltr" style="direction:ltr;text-align:left;">
-                        <label class="neon-label">اسم المستخدم</label>
-                        <div class="field-glow"></div>
-                    </div>
-
-                    <!-- Password -->
-                    <div class="neon-field" id="field-pass" style="position:relative;">
-                        <i class="fa-solid fa-key field-icon"></i>
-                        <input type="password" id="login-password" class="neon-input" placeholder=" "
-                            autocomplete="current-password" dir="ltr"
-                            style="direction:ltr;text-align:left;padding-left:2.5rem;">
-                        <label class="neon-label">كلمة المرور</label>
-                        <button type="button"
-                            onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.querySelector('i').className='fa-solid '+(p.type==='text'?'fa-eye-slash':'fa-eye');"
-                            style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#00fff7;cursor:pointer;padding:4px;z-index:10;">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        <div class="field-glow"></div>
-                    </div>
-
-                    <!-- Login Button -->
-                    <button id="login-btn" class="cyber-btn" onclick="handleLoginClick()">
-                        <div class="cyber-btn-bg"></div>
-                        <div class="cyber-btn-inner">
-                            <span id="btn-text"><i class="fa-solid fa-arrow-right-to-bracket"></i> دخول النظام</span>
+                    <form id="login-form" onsubmit="event.preventDefault(); handleLoginClick();">
+                        <!-- Username -->
+                        <div class="neon-field" id="field-user">
+                            <i class="fa-solid fa-user field-icon"></i>
+                            <input type="text" id="login-email" class="neon-input" placeholder=" "
+                                autocomplete="username" dir="ltr" style="direction:ltr;text-align:left;">
+                            <label class="neon-label">اسم المستخدم</label>
+                            <div class="field-glow"></div>
                         </div>
-                        <div class="cyber-btn-glow"></div>
-                    </button>
+
+                        <!-- Password -->
+                        <div class="neon-field" id="field-pass" style="position:relative;">
+                            <i class="fa-solid fa-key field-icon"></i>
+                            <input type="password" id="login-password" class="neon-input" placeholder=" "
+                                autocomplete="current-password" dir="ltr"
+                                style="direction:ltr;text-align:left;padding-left:2.5rem;">
+                            <label class="neon-label">كلمة المرور</label>
+                            <button type="button"
+                                onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.querySelector('i').className='fa-solid '+(p.type==='text'?'fa-eye-slash':'fa-eye');"
+                                style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#00fff7;cursor:pointer;padding:4px;z-index:10;">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <div class="field-glow"></div>
+                        </div>
+
+                        <!-- Login Button -->
+                        <button type="submit" id="login-btn" class="cyber-btn">
+                            <div class="cyber-btn-bg"></div>
+                            <div class="cyber-btn-inner">
+                                <span id="btn-text"><i class="fa-solid fa-arrow-right-to-bracket"></i> دخول
+                                    النظام</span>
+                            </div>
+                            <div class="cyber-btn-glow"></div>
+                        </button>
+                    </form>
 
                     <!-- Status Message -->
                     <div id="login-status" class="login-status hidden"></div>
