@@ -41,24 +41,31 @@ class App {
         const password = document.getElementById('login-password').value;
 
         if (!email || !password) {
-            this.showToast('رجاءً إدخال البريد الإلكتروني وكلمة المرور', 'error');
+            if (window.setLoginStatus) setLoginStatus('error', 'fa-triangle-exclamation', 'الرجاء إدخال اسم المستخدم وكلمة المرور');
             return;
         }
 
         const user = storage.getUserByEmail(email);
         if (user && user.password === password) {
             if (user.status !== 'Active') {
-                this.showToast('هذا الحساب معطل. يرجى مراجعة الإدارة.', 'error');
+                if (window.setLoginStatus) setLoginStatus('error', 'fa-ban', 'هذا الحساب معطل — يرجى مراجعة الإدارة');
                 return;
             }
 
             // Save to localStorage
             localStorage.setItem('altahera_session_user', JSON.stringify({ email: user.email, password: user.password }));
 
-            this.applyLoginState(user);
-            this.showToast(`مرحباً ${user.name} في فرع ${this.currentUser.branchName}`, 'success');
+            if (window.setLoginStatus) setLoginStatus('success', 'fa-check-circle', `مرحباً ${user.name} — جاري الدخول...`);
+            setTimeout(() => {
+                if (window.clearLoginStatus) clearLoginStatus();
+                this.applyLoginState(user);
+                this.showToast(`مرحباً ${user.name} في فرع ${this.currentUser.branchName}`, 'success');
+            }, 600);
         } else {
-            this.showToast('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'error');
+            if (window.setLoginStatus) setLoginStatus('error', 'fa-circle-xmark', 'اسم المستخدم أو كلمة المرور غير صحيحة');
+            // Shake the inputs
+            const fields = document.querySelectorAll('.neon-field');
+            fields.forEach(f => { f.style.animation = 'shake 0.4s ease'; setTimeout(() => f.style.animation = '', 400); });
         }
     }
 

@@ -132,6 +132,9 @@
                         <div class="cyber-btn-glow"></div>
                     </button>
 
+                    <!-- Status Message -->
+                    <div id="login-status" class="login-status hidden"></div>
+
                     <!-- Footer -->
                     <div class="panel-footer-text">
                         الطاهرة للأشعة والتحاليل الطبية &copy; 2026
@@ -354,31 +357,47 @@
                 }, 550);
             };
 
+            /* ── Status Helper ── */
+            window.setLoginStatus = function (type, icon, text) {
+                const el = document.getElementById('login-status');
+                if (!el) return;
+                el.className = 'login-status ' + type;
+                el.innerHTML = `<i class="fa-solid ${icon}"></i> ${text}`;
+            };
+            window.clearLoginStatus = function () {
+                const el = document.getElementById('login-status');
+                if (el) el.className = 'login-status hidden';
+            };
+
             /* ── Login Handler with animation ── */
             window.handleLoginClick = function () {
                 const scanOverlay = document.getElementById('scan-overlay');
                 const btnText = document.getElementById('btn-text');
                 const loginBtn = document.getElementById('login-btn');
 
+                clearLoginStatus();
+
                 // Fallback: if elements are missing just login directly
                 if (!btnText || !scanOverlay) {
+                    setLoginStatus('loading', 'fa-circle-notch fa-spin', 'جاري التحقق من البيانات...');
                     if (window.app) app.loginWithEmail();
                     return;
                 }
 
                 // Scanning animation
                 scanOverlay.classList.remove('scanning');
-                void scanOverlay.offsetWidth; // reflow hack
+                void scanOverlay.offsetWidth;
                 scanOverlay.classList.add('scanning');
 
                 btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري التحقق...';
+                setLoginStatus('loading', 'fa-circle-notch fa-spin', 'جاري الاتصال بالخادم والتحقق من البيانات...');
                 if (loginBtn) loginBtn.disabled = true;
 
                 setTimeout(() => {
                     if (loginBtn) loginBtn.disabled = false;
                     btnText.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> دخول النظام';
                     if (window.app) app.loginWithEmail();
-                }, 1400);
+                }, 1000);
             };
 
             /* ── Restore portal state on logout ── */
