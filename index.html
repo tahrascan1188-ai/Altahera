@@ -115,11 +115,17 @@
                     </div>
 
                     <!-- Password -->
-                    <div class="neon-field" id="field-pass">
+                    <div class="neon-field" id="field-pass" style="position:relative;">
                         <i class="fa-solid fa-key field-icon"></i>
                         <input type="password" id="login-password" class="neon-input" placeholder=" "
-                            autocomplete="current-password" dir="ltr" style="direction:ltr;text-align:left;">
+                            autocomplete="current-password" dir="ltr"
+                            style="direction:ltr;text-align:left;padding-left:2.5rem;">
                         <label class="neon-label">كلمة المرور</label>
+                        <button type="button"
+                            onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.querySelector('i').className='fa-solid '+(p.type==='text'?'fa-eye-slash':'fa-eye');"
+                            style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#00fff7;cursor:pointer;padding:4px;z-index:10;">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
                         <div class="field-glow"></div>
                     </div>
 
@@ -369,7 +375,7 @@
                 if (el) el.className = 'login-status hidden';
             };
 
-            /* ── Login Handler with animation ── */
+            /* ── Login Handler ── */
             window.handleLoginClick = function () {
                 const scanOverlay = document.getElementById('scan-overlay');
                 const btnText = document.getElementById('btn-text');
@@ -377,27 +383,16 @@
 
                 clearLoginStatus();
 
-                // Fallback: if elements are missing just login directly
-                if (!btnText || !scanOverlay) {
-                    setLoginStatus('loading', 'fa-circle-notch fa-spin', 'جاري التحقق من البيانات...');
-                    if (window.app) app.loginWithEmail();
-                    return;
+                if (scanOverlay) {
+                    scanOverlay.classList.remove('scanning');
+                    void scanOverlay.offsetWidth;
+                    scanOverlay.classList.add('scanning');
                 }
 
-                // Scanning animation
-                scanOverlay.classList.remove('scanning');
-                void scanOverlay.offsetWidth;
-                scanOverlay.classList.add('scanning');
+                setLoginStatus('loading', 'fa-circle-notch fa-spin', 'جاري التحقق من البيانات...');
 
-                btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري التحقق...';
-                setLoginStatus('loading', 'fa-circle-notch fa-spin', 'جاري الاتصال بالخادم والتحقق من البيانات...');
-                if (loginBtn) loginBtn.disabled = true;
-
-                setTimeout(() => {
-                    if (loginBtn) loginBtn.disabled = false;
-                    btnText.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> دخول النظام';
-                    if (window.app) app.loginWithEmail();
-                }, 1000);
+                // Login immediately - no artificial delay
+                if (window.app) app.loginWithEmail();
             };
 
             /* ── Restore portal state on logout ── */
