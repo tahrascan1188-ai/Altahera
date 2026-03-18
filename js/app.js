@@ -7,26 +7,14 @@ class App {
     }
 
     async init() {
-        // Show loading state
-        const loginBtn = document.getElementById('login-btn');
-        if (loginBtn) {
-            loginBtn.textContent = 'جاري التحميل...';
-            loginBtn.disabled = true;
-        }
-
         // Add overlay for mobile sidebar
         const overlay = document.createElement('div');
         overlay.className = 'sidebar-overlay';
         overlay.onclick = () => this.toggleSidebar();
         document.body.appendChild(overlay);
 
-        // Sync Data with Google Sheets
-        await storage.syncDB();
-
-        if (loginBtn) {
-            loginBtn.textContent = 'تسجيل الدخول';
-            loginBtn.disabled = false;
-        }
+        // Sync Data with Google Sheets in BACKGROUND — never block the login button
+        storage.syncDB().catch(() => { });
 
         // Populate branches list if we wanted to show it on login (not needed now since we use email)
 
