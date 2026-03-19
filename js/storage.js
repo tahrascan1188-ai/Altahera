@@ -230,6 +230,14 @@ class StorageManager {
         }
         return false;
     }
+    async deleteDevice(id) {
+        const res = await this.apiPost('DELETE', 'Devices', { id: id });
+        if (res) {
+            this.localMutation('DELETE', 'Devices', { id: id });
+            return true;
+        }
+        return false;
+    }
     async updateDeviceStatus(id, status) {
         const dev = this.getDeviceById(id);
         if (dev) {
@@ -301,6 +309,14 @@ class StorageManager {
         if (res) {
             this.localMutation('ADD', 'Tests', res);
             return res;
+        }
+        return false;
+    }
+    async deleteTest(id) {
+        const res = await this.apiPost('DELETE', 'Tests', { id: id });
+        if (res) {
+            this.localMutation('DELETE', 'Tests', { id: id });
+            return true;
         }
         return false;
     }

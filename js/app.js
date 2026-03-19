@@ -368,11 +368,12 @@ class App {
             let managerActions = '';
             if (canManage) {
                 managerActions = `
-    <div class="device-actions" style = "margin-top: 1rem;" >
-        <button class="btn btn-outline" style="width:100%; padding:0.4rem; font-size: 0.85rem; border:1px solid var(--border); background:var(--bg-main); cursor:pointer;" onclick="app.editDevicePrompt('${dev.id}')">
-            <i class="fa-solid fa-pen"></i> نقل / تعديل الحالة
+    <div class="device-actions" style="margin-top: 1rem; display:flex; gap:0.5rem;" >
+        <button class="btn btn-outline" style="flex:1; padding:0.4rem; font-size: 0.85rem; border:1px solid var(--border); background:var(--bg-main); cursor:pointer;" onclick="app.editDevicePrompt('${dev.id}')">
+            <i class="fa-solid fa-pen"></i> نقل/تعديل
         </button>
-                    </div>
+        ${this.currentUser.role === 'Admin' ? `<button class="btn btn-outline" style="padding:0.4rem; font-size: 0.85rem; border:1px solid #fecdd3; background:#fff1f2; color:#be123c; cursor:pointer;" onclick="app.submitDeleteDevice('${dev.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
+    </div>
     `;
             }
 
@@ -932,6 +933,7 @@ class App {
                     <button class="btn btn-primary" onclick="app.editTestPrompt('${test.id}')" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">
                         <i class="fa-solid fa-pen"></i> تعديل
                     </button>
+                    ${this.currentUser.role === 'Admin' ? `<button class="btn" style="background:#fecdd3; color:#be123c; padding: 0.3rem 0.8rem; font-size: 0.85rem; border:1px solid #fecdd3; margin-right: 0.2rem;" onclick="app.submitDeleteTest('${test.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>` : ''}
             `;
             tbody.appendChild(tr);
@@ -986,6 +988,21 @@ class App {
             }
         } else {
             this.showToast('الرجاء إدخال سعر صحيح', 'error');
+        }
+    }
+
+    async submitDeleteTest(id, btn) {
+        if (!confirm('تحذير: هل أنت متأكد من حذف هذا الفحص نهائياً؟')) return;
+        const origText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+        if (await storage.deleteTest(id)) {
+            this.showToast('تم مسح الفحص بنجاح', 'success');
+            this.loadManageTests(this.hasPermission('Edit Tests'));
+        } else {
+            this.showToast('فشل مسح الفحص', 'error');
+            btn.innerHTML = origText;
+            btn.disabled = false;
         }
     }
 
@@ -1086,6 +1103,7 @@ class App {
                         <i class="fa-solid fa-power-off"></i>
                     </button>
                     ${user.id !== 'u_admin' ? `<button class="btn btn-primary" style="padding:0.3rem 0.6rem;" onclick="app.editUserPrompt('${user.id}')" title="تعديل"><i class="fa-solid fa-pen"></i></button>` : ''}
+                    ${this.currentUser.role === 'Admin' && user.id !== 'u_admin' ? `<button class="btn" style="background:#fecdd3; color:#be123c; padding:0.3rem 0.6rem; border:1px solid #fecdd3; margin-right: 0.2rem;" onclick="app.submitDeleteUser('${user.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1105,6 +1123,21 @@ class App {
             this.loadUsersTable();
         } else {
             this.showToast('حدث خطأ', 'error');
+        }
+    }
+
+    async submitDeleteUser(id, btn) {
+        if (!confirm('تحذير: القضاء على المستخدم سيمسحه نهائياً من قاعدة البيانات. هل أنت متأكد؟')) return;
+        const origText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+        if (await storage.deleteUser(id)) {
+            this.showToast('تم حذف المستخدم بنجاح', 'success');
+            this.loadUsersTable();
+        } else {
+            this.showToast('فشل حذف المستخدم', 'error');
+            btn.innerHTML = origText;
+            btn.disabled = false;
         }
     }
 
@@ -1669,6 +1702,28 @@ class App {
         } else {
             this.showToast('حدث خطأ أثناء الحفظ', 'error');
             if (btn) { btn.innerHTML = 'حفظ وإرسال إشعار'; btn.disabled = false; }
+        }
+    }
+
+    async submitDeleteDevice(id, btn) {
+        if (!confirm('تحذير: هل أنت متأكد من حذف هذا الجهاز بشكل نهائي من قاعدة البيانات؟')) return;
+        const origText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+        if (await storage.deleteDevice(id)) {
+            this.showToast('تم مسح الجهاز بنجاح', 'success');
+            if (this.currentView === 'devices') this.loadDevices();
+            if (this.currentView === 'global-devices') {
+                let activeFilter = 'All';
+                if (document.querySelector('.filter-available') && document.querySelector('.filter-available').classList.contains('active')) activeFilter = 'Available';
+                if (document.querySelector('.filter-maintenance') && document.querySelector('.filter-maintenance').classList.contains('active')) activeFilter = 'Maintenance';
+                if (document.querySelector('.filter-outofservice') && document.querySelector('.filter-outofservice').classList.contains('active')) activeFilter = 'Out of Service';
+                this.filterGlobalDevices(activeFilter);
+            }
+        } else {
+            this.showToast('فشل حذف الجهاز', 'error');
+            btn.innerHTML = origText;
+            btn.disabled = false;
         }
     }
 
