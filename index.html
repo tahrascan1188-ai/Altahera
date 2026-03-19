@@ -162,9 +162,17 @@
             <div class="logo">
                 <img src="img/trc-logo.svg" alt="TRC Logo" class="trc-logo-mobile"> الطاهرة للأشعة والتحاليل الطبية
             </div>
-            <button class="mobile-nav-toggle" onclick="app.toggleSidebar()">
-                <i class="fa-solid fa-bars"></i>
-            </button>
+            <div style="display:flex; align-items:center; gap: 1rem;">
+                <div class="notification-bell" onclick="app.navigate('reports')"
+                    style="position:relative; cursor:pointer;">
+                    <i class="fa-solid fa-bell" style="font-size:1.2rem;"></i>
+                    <span id="mobile-notif-badge" class="badge badge-danger"
+                        style="position:absolute; top:-5px; right:-10px; font-size:0.6rem; display:none;">0</span>
+                </div>
+                <button class="mobile-nav-toggle" onclick="app.toggleSidebar()">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Sidebar Navigation -->
@@ -174,13 +182,21 @@
                 <h2 style="font-size: 1.1rem; text-align: center;">الطاهرة للأشعة والتحاليل الطبية</h2>
             </div>
 
-            <div class="user-info">
-                <div class="user-avatar">
-                    <i class="fa-solid fa-user-circle fa-2x"></i>
+            <div class="user-info" style="justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap: 1rem;">
+                    <div class="user-avatar">
+                        <i class="fa-solid fa-user-circle fa-2x"></i>
+                    </div>
+                    <div class="user-details">
+                        <span id="current-user-role" class="user-role">موظف استقبال</span>
+                        <span id="current-user-branch" class="user-branch">فرع روكسي</span>
+                    </div>
                 </div>
-                <div class="user-details">
-                    <span id="current-user-role" class="user-role">موظف استقبال</span>
-                    <span id="current-user-branch" class="user-branch">فرع روكسي</span>
+                <div class="notification-bell" onclick="app.navigate('reports')"
+                    style="position:relative; cursor:pointer; color:var(--primary);">
+                    <i class="fa-solid fa-bell" style="font-size:1.2rem;"></i>
+                    <span id="desktop-notif-badge" class="badge badge-danger"
+                        style="position:absolute; top:-5px; right:-8px; font-size:0.6rem; display:none;">0</span>
                 </div>
             </div>
 
@@ -211,6 +227,9 @@
                     <a href="#" class="nav-item" id="nav-global-devices" data-view="global-devices"
                         onclick="app.navigate('global-devices')">
                         <i class="fa-solid fa-satellite-dish"></i> مراقبة أجهزة الفروع
+                    </a>
+                    <a href="#" class="nav-item" id="nav-reports" data-view="reports" onclick="app.navigate('reports')">
+                        <i class="fa-solid fa-file-invoice"></i> حركة الأجهزة والاشعارات
                     </a>
                 </div>
             </nav>
@@ -258,6 +277,11 @@
 
                 <!-- Global Devices Monitoring View (Admin/Manager Only) -->
                 <div id="view-global-devices" class="content-view">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Reports & Notifications View (Admin/Manager Only) -->
+                <div id="view-reports" class="content-view">
                     <!-- Populated by JS -->
                 </div>
             </div>

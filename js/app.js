@@ -104,6 +104,7 @@ class App {
 
         // Go to default view
         this.navigate('dashboard');
+        this.updateNotificationBell();
 
         this.showToast(`مرحباً ${user.name} في فرع ${this.currentUser.branchName}`, 'success');
     }
@@ -127,10 +128,12 @@ class App {
         const navTests = document.getElementById('nav-manage-tests');
         const navUsers = document.getElementById('nav-users');
         const navGlobalDevices = document.getElementById('nav-global-devices');
+        const navReports = document.getElementById('nav-reports');
 
         if (navTests) navTests.style.display = (this.hasPermission('Manage Tests') || this.hasPermission('Edit Tests')) ? 'flex' : 'none';
         if (navUsers) navUsers.style.display = this.hasPermission('Manage Users') ? 'flex' : 'none';
         if (navGlobalDevices) navGlobalDevices.style.display = this.hasPermission('Manage Devices') ? 'flex' : 'none';
+        if (navReports) navReports.style.display = this.hasPermission('Manage Devices') ? 'flex' : 'none';
 
         // General sidebar links logic
         const linkTests = document.querySelector('.nav-item[data-view="tests"]');
@@ -172,12 +175,12 @@ class App {
 
         // Update nav links
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        const activeLink = document.querySelector(`.nav-item[data-view="${viewId}"]`);
+        const activeLink = document.querySelector(`.nav - item[data - view="${viewId}"]`);
         if (activeLink) activeLink.classList.add('active');
 
         // Update views
         document.querySelectorAll('.content-view').forEach(el => el.classList.remove('active'));
-        const targetView = document.getElementById(`view-${viewId}`);
+        const targetView = document.getElementById(`view - ${viewId}`);
         if (targetView) targetView.classList.add('active');
 
         this.currentView = viewId;
@@ -195,21 +198,21 @@ class App {
     }
 
     renderView(viewId) {
-        const container = document.getElementById(`view-${viewId}`);
+        const container = document.getElementById(`view - ${viewId}`);
         if (!container) return;
 
         if (viewId === 'dashboard') {
             container.innerHTML = `
-                <div class="dashboard-header">
+        < div class= "dashboard-header" >
                     <h2>نظرة عامة على النظام</h2>
                     <p>فرع ${this.currentUser.branchName}</p>
+                </div >
+            <div class="stats-grid" style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <div class="glass-panel" style="padding: 1.5rem; flex: 1; text-align: center;">
+                    <h3 class="text-primary">مرحباً ${this.currentUser.name}</h3>
+                    <p class="text-muted">نظام إدارة الفروع المركزي - يرجى الاختيار من القائمة للبدء</p>
                 </div>
-                <div class="stats-grid" style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <div class="glass-panel" style="padding: 1.5rem; flex: 1; text-align: center;">
-                        <h3 class="text-primary">مرحباً ${this.currentUser.name}</h3>
-                        <p class="text-muted">نظام إدارة الفروع المركزي - يرجى الاختيار من القائمة للبدء</p>
-                    </div>
-                </div>
+            </div>
             `;
         } else if (viewId === 'tests') {
             this.renderTestsView(container);
@@ -223,15 +226,17 @@ class App {
             this.renderUsersView(container);
         } else if (viewId === 'global-devices') {
             this.renderGlobalDevicesView(container);
+        } else if (viewId === 'reports') {
+            this.renderReportsView(container);
         }
     }
 
     // --- Tests View ---
     renderTestsView(container) {
         container.innerHTML = `
-            <div class="view-header">
-                <h2>دليل التحاليل والأشعة</h2>
-            </div>
+            < div class= "view-header" >
+            <h2>دليل التحاليل والأشعة</h2>
+            </div >
             <div class="search-box glass-panel">
                 <i class="fa-solid fa-search"></i>
                 <input type="text" id="test-search-input" placeholder="ابحث باسم التحليل أو الأشعة..." onkeyup="app.filterTests()">
@@ -265,15 +270,15 @@ class App {
             if (!isAvailable) {
                 const device = storage.getDeviceById(test.deviceId);
                 warningHtml = `
-                    <div class="test-warning">
+            < div class= "test-warning" >
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>غير متاح مؤقتاً لوجود عطل بالجهاز (${device ? device.name : ''}).</span>
-                    </div>
-                `;
+                    </div >
+            `;
             }
 
             const card = document.createElement('div');
-            card.className = `glass-panel test-card ${!isAvailable ? 'disabled-card' : ''}`;
+            card.className = `glass - panel test - card ${!isAvailable ? 'disabled-card' : ''}`;
 
             // Specific days parsing
             let daysDisp = 'طوال الأسبوع';
@@ -284,12 +289,12 @@ class App {
             if (test.allWeek) daysDisp = 'طوال الأسبوع';
 
             card.innerHTML = `
-                <div class="test-card-header">
+    < div class="test-card-header" >
                     <span class="test-category ${test.category === 'Radiology' ? 'cat-rad' : 'cat-lab'}">
                         ${test.category === 'Radiology' ? 'أشعة' : 'تحليل معملي'}
                     </span>
                     <span class="test-price">${test.price} ج.م</span>
-                </div>
+                </div >
                 <h3>${test.nameAr}</h3>
                 <p class="test-en-name text-muted">${test.nameEn}</p>
                 <div class="test-details">
@@ -298,7 +303,7 @@ class App {
                     <p class="test-status ${statusClass}"><i class="fa-solid ${isAvailable ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${statusText}</p>
                 </div>
                 ${warningHtml}
-            `;
+`;
             grid.appendChild(card);
         });
     }
@@ -320,12 +325,12 @@ class App {
     renderDevicesView(container) {
         const canManageDevices = this.hasPermission('Manage Devices');
         container.innerHTML = `
-            <div class="view-header flex-between">
-                <h2>أجهزة الأشعة بفرعك</h2>
+    < div class="view-header flex-between" >
+        <h2>أجهزة الأشعة بفرعك</h2>
                 ${canManageDevices ? '<button class="btn btn-primary" onclick="app.showAddDeviceModal()"><i class="fa-solid fa-plus"></i> إضافة جهاز</button>' : ''}
-            </div>
-            <div id="devices-grid" class="cards-grid"></div>
-        `;
+            </div >
+    <div id="devices-grid" class="cards-grid"></div>
+`;
         this.loadDevices();
     }
 
@@ -363,28 +368,26 @@ class App {
             let managerActions = '';
             if (canManage) {
                 managerActions = `
-                    <div class="device-actions" style="margin-top: 1rem;">
-                        <select onchange="app.changeDeviceStatus('${dev.id}', this.value)" class="status-select" style="padding: 0.5rem; width:100%; border:1px solid var(--border); border-radius:var(--radius-sm)">
-                            <option value="Available" ${dev.status === 'Available' ? 'selected' : ''}>متاح</option>
-                            <option value="Maintenance" ${dev.status === 'Maintenance' ? 'selected' : ''}>صيانة</option>
-                            <option value="Out of Service" ${dev.status === 'Out of Service' ? 'selected' : ''}>خارج الخدمة</option>
-                        </select>
-                    </div>
-                `;
+    < div class="device-actions" style = "margin-top: 1rem;" >
+        <button class="btn btn-outline" style="width:100%; padding:0.4rem; font-size: 0.85rem; border:1px solid var(--border); background:var(--bg-main); cursor:pointer;" onclick="app.editDevicePrompt('${dev.id}')">
+            <i class="fa-solid fa-pen"></i> نقل / تعديل الحالة
+        </button>
+                    </div >
+    `;
             }
 
             const card = document.createElement('div');
             card.className = 'glass-panel device-card';
             card.innerHTML = `
-                <div class="device-header">
+    < div class="device-header" >
                     <div class="device-icon"><i class="fa-solid fa-laptop-medical"></i></div>
                     <span class="badge ${statusBadge}"><i class="fa-solid ${icon}"></i> ${statusTextAr}</span>
-                </div>
+                </div >
                 <h3>${dev.name}</h3>
                 <p class="text-muted" style="margin: 0.2rem 0;">النوع: ${dev.type}</p>
                 <p class="text-muted" style="margin: 0.2rem 0; font-size: 0.85rem;"><i class="fa-solid fa-location-dot"></i> فرع ${branch ? branch.name : '?'}</p>
                 ${managerActions}
-            `;
+`;
             grid.appendChild(card);
         });
     }
@@ -419,13 +422,13 @@ class App {
         }
 
         const branches = storage.getBranches();
-        const branchOpts = `<option value="all">كل الفروع</option>` +
-            branches.map(b => `<option value="${b.id}" ${this.calendarBranchFilter === b.id ? 'selected' : ''}>${b.name}</option>`).join('');
+        const branchOpts = `< option value = "all" > كل الفروع</option > ` +
+            branches.map(b => `< option value = "${b.id}" ${this.calendarBranchFilter === b.id ? 'selected' : ''}> ${b.name}</option > `).join('');
 
         const isCallCenterOrAdmin = this.currentUser.branchId === 'all';
 
         container.innerHTML = `
-            <div class="view-header flex-between" style="margin-bottom:1.5rem;">
+    < div class="view-header flex-between" style = "margin-bottom:1.5rem;" >
                 <div>
                     <h2 style="margin:0;"><i class="fa-solid fa-calendar-week" style="color:var(--primary);margin-left:0.5rem;"></i> جدول الأطباء الأسبوعي</h2>
                     <p style="margin:0.25rem 0 0; color:var(--text-muted); font-size:0.9rem;">عرض مواعيد الأطباء لتواريخ حقيقية</p>
@@ -434,7 +437,7 @@ class App {
                     ${canManageDoctors ? '<button class="btn btn-primary" onclick="app.showAddDoctorModal()"><i class="fa-solid fa-user-plus"></i> إضافة طبيب</button>' : ''}
                     ${canManageSchedules ? '<button class="btn" style="background:var(--secondary); color:#fff;" onclick="app.showAddScheduleModal()"><i class="fa-solid fa-calendar-plus"></i> إضافة موعد</button>' : ''}
                 </div>
-            </div>
+            </div >
 
             <div class="calendar-toolbar">
                 <div class="cal-nav-group">
@@ -453,7 +456,7 @@ class App {
             </div>
 
             <div id="weekly-calendar" class="weekly-calendar-grid"></div>
-        `;
+`;
         this.loadDoctorsCalendar(canManageSchedules);
     }
 
@@ -502,7 +505,7 @@ class App {
         if (labelEl) {
             const d1Options = { day: 'numeric', month: 'short' };
             const d2Options = { day: 'numeric', month: 'short', year: 'numeric' };
-            labelEl.textContent = `${weekDates[0].toLocaleDateString('ar-EG', d1Options)} - ${weekDates[6].toLocaleDateString('ar-EG', d2Options)}`;
+            labelEl.textContent = `${weekDates[0].toLocaleDateString('ar-EG', d1Options)} - ${weekDates[6].toLocaleDateString('ar-EG', d2Options)} `;
         }
 
         let allDoctors = [];
@@ -1534,6 +1537,243 @@ class App {
                 btn.disabled = false;
             }
         }
+    }
+
+    // --- Device Movement Tracking & Notifications ---
+    editDevicePrompt(deviceId) {
+        const dev = storage.getDeviceById(deviceId);
+        if (!dev) return;
+
+        const branches = storage.getBranches();
+        const branchOpts = branches.map(b => `<option value="${b.id}" ${dev.branchId === b.id ? 'selected' : ''}>${b.name}</option>`).join('');
+
+        const bodyHtml = `
+            <div class="form-group-modal">
+                <label>اسم الجهاز</label>
+                <input type="text" id="modal-dev-name" value="${dev.name}" disabled>
+            </div>
+            <div class="form-group-modal">
+                <label>الفرع الحالي / الجديد</label>
+                <select id="modal-dev-branch">
+                    ${branchOpts}
+                </select>
+            </div>
+            <div class="form-group-modal">
+                <label>تحديد حالة الجهاز</label>
+                <select id="modal-dev-status">
+                    <option value="Available" ${dev.status === 'Available' ? 'selected' : ''}>متاح العمل</option>
+                    <option value="Maintenance" ${dev.status === 'Maintenance' ? 'selected' : ''}>دخول صيانة</option>
+                    <option value="Out of Service" ${dev.status === 'Out of Service' ? 'selected' : ''}>خارج الخدمة / تكهين</option>
+                </select>
+            </div>
+            <div class="form-group-modal">
+                <label style="color:var(--accent); font-weight:bold;">سبب النقل / التعديل (إجباري)</label>
+                <textarea id="modal-dev-reason" rows="3" placeholder="اكتب سبب تغيير الفرع أو عطل الجهاز هنا لتسجيله بالتقرير..." style="width:100%; border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.8rem; outline:none; font-family:inherit;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background:var(--border-color);" onclick="app.closeModal()">إلغاء</button>
+                <button class="btn btn-primary" onclick="app.submitEditDevice('${deviceId}')">حفظ وإرسال إشعار</button>
+            </div>
+        `;
+        this.openModal(`تعديل ومعالجة جهاز: ${dev.name}`, bodyHtml);
+    }
+
+    async submitEditDevice(deviceId) {
+        const dev = storage.getDeviceById(deviceId);
+        if (!dev) return;
+
+        const newBranch = document.getElementById('modal-dev-branch').value;
+        const newStatus = document.getElementById('modal-dev-status').value;
+        const reason = document.getElementById('modal-dev-reason').value.trim();
+
+        if (dev.branchId === newBranch && dev.status === newStatus) {
+            this.showToast('لم يتم تغيير أي بيانات', 'warning');
+            return;
+        }
+
+        if (!reason) {
+            this.showToast('عفواً، يجب كتابة سبب لتوثيق التعديل.', 'error');
+            return;
+        }
+
+        const oldBranch = storage.getBranchById(dev.branchId);
+        const newBranchObj = storage.getBranchById(newBranch);
+        const oldBranchName = oldBranch ? oldBranch.name : 'غير معروف';
+        const newBranchName = newBranchObj ? newBranchObj.name : 'غير معروف';
+
+        const oldStatus = dev.status;
+        dev.branchId = newBranch;
+        dev.status = newStatus;
+
+        const btn = document.querySelector('.modal-footer .btn-primary');
+        if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; }
+
+        if (await storage.updateDevice(dev)) {
+            const statusMap = { 'Available': 'متاح العمل', 'Maintenance': 'صيانة', 'Out of Service': 'خارج الخدمة' };
+
+            await storage.addDeviceLog({
+                id: 'log_' + Date.now(),
+                deviceId: dev.id,
+                deviceName: dev.name,
+                oldBranch: oldBranchName,
+                newBranch: newBranchName,
+                oldStatusStr: statusMap[oldStatus] || oldStatus,
+                newStatusStr: statusMap[newStatus] || newStatus,
+                reason: reason,
+                date: new Date().toISOString(),
+                userName: this.currentUser.name
+            });
+
+            const isTransfer = oldBranchName !== newBranchName;
+            let notifMsg = isTransfer
+                ? `تم نقل الجهاز (${dev.name}) من (${oldBranchName}) إلى (${newBranchName})`
+                : `تم تحديث جاهزية (${dev.name}) بفرع (${newBranchName}) إلى (${statusMap[newStatus]})`;
+
+            await storage.addNotification({
+                id: 'notif_' + Date.now(),
+                message: notifMsg + ` - السبب: ${reason}`,
+                type: newStatus === 'Available' ? 'success' : 'warning',
+                timestamp: new Date().toISOString(),
+                readBy: JSON.stringify([this.currentUser.id])
+            });
+
+            this.showToast('تم حفظ التقرير وإرسال الإشعار بنجاح!', 'success');
+
+            if (this.currentView === 'devices') this.loadDevices();
+            if (this.currentView === 'global-devices') {
+                let activeFilter = 'All';
+                if (document.querySelector('.filter-available') && document.querySelector('.filter-available').classList.contains('active')) activeFilter = 'Available';
+                if (document.querySelector('.filter-maintenance') && document.querySelector('.filter-maintenance').classList.contains('active')) activeFilter = 'Maintenance';
+                if (document.querySelector('.filter-outofservice') && document.querySelector('.filter-outofservice').classList.contains('active')) activeFilter = 'Out of Service';
+                this.filterGlobalDevices(activeFilter);
+            }
+            this.updateNotificationBell();
+            this.closeModal();
+        } else {
+            this.showToast('حدث خطأ أثناء الحفظ', 'error');
+            if (btn) { btn.innerHTML = 'حفظ وإرسال إشعار'; btn.disabled = false; }
+        }
+    }
+
+    renderReportsView(container) {
+        container.innerHTML = `
+            <div class="view-header flex-between" style="border-bottom: 2px solid var(--border); padding-bottom:1rem; margin-bottom:1.5rem;">
+                <h2>دورية تحركات وتقارير الأجهزة</h2>
+            </div>
+            <div style="display:flex; gap:2rem; flex-wrap:wrap;">
+                <div style="flex:1; min-width: 320px;" class="glass-panel">
+                    <h3 style="margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem;"><i class="fa-solid fa-clock-rotate-left"></i> سجل القرارات والأعطال</h3>
+                    <div id="device-logs-container" style="max-height: 60vh; overflow-y:auto; padding-right:0.5rem;"></div>
+                </div>
+                <div style="flex:1; min-width: 320px;" class="glass-panel">
+                    <h3 style="margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem;"><i class="fa-solid fa-bell"></i> الإشعارات الأخيرة</h3>
+                    <div id="notifications-container" style="max-height: 60vh; overflow-y:auto; padding-right:0.5rem;"></div>
+                </div>
+            </div>
+        `;
+
+        this.loadDeviceLogs();
+        this.loadNotifications();
+    }
+
+    loadDeviceLogs() {
+        const logsContainer = document.getElementById('device-logs-container');
+        if (!logsContainer) return;
+
+        const logs = storage.getDeviceLogs().sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (logs.length === 0) {
+            logsContainer.innerHTML = '<p class="text-muted">لا توجد حركات أجهزة حديثة مسجلة.</p>';
+            return;
+        }
+
+        let html = '';
+        logs.forEach(log => {
+            const dStr = new Date(log.date).toLocaleString('ar-EG');
+            html += `
+                <div style="margin-bottom: 1rem; padding: 1rem; border-right: 4px solid var(--primary); background: var(--bg-main); border-radius: var(--radius-sm);">
+                    <div class="flex-between" style="margin-bottom:0.5rem;">
+                        <strong><i class="fa-solid fa-laptop-medical text-primary"></i> ${log.deviceName}</strong>
+                        <span style="font-size:0.8rem; color:var(--text-muted);">${dStr}</span>
+                    </div>
+                    <p style="font-size:0.9rem; margin:0.2rem 0;">الفروع: <span style="color:var(--text-muted);">${log.oldBranch} <i class="fa-solid fa-arrow-left"></i></span> ${log.newBranch}</p>
+                    <p style="font-size:0.9rem; margin:0.2rem 0;">الحالة: <span style="color:var(--text-muted);">${log.oldStatusStr} <i class="fa-solid fa-arrow-left"></i></span> ${log.newStatusStr}</p>
+                    <div style="margin:0.8rem 0 0 0; background:rgba(255, 193, 7, 0.1); padding:0.8rem; border-radius:4px; border-right: 2px solid var(--warning);">
+                        <span style="font-size:0.85rem; color:var(--warning); display:block; margin-bottom:0.2rem;">سبب النقل/التعديل:</span>
+                        <p style="margin:0; font-size:0.9rem; font-weight:500;">${log.reason}</p>
+                    </div>
+                    <p style="font-size:0.8rem; margin:0.5rem 0 0 0; color:var(--text-muted); text-align:left;">بناءً على طلب من: ${log.userName}</p>
+                </div>
+            `;
+        });
+        logsContainer.innerHTML = html;
+    }
+
+    loadNotifications() {
+        const notifsContainer = document.getElementById('notifications-container');
+        if (!notifsContainer) return;
+
+        const notifs = storage.getNotifications().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        if (notifs.length === 0) {
+            notifsContainer.innerHTML = '<p class="text-muted">لا توجد إشعارات حالياً.</p>';
+            return;
+        }
+
+        let html = '';
+        notifs.forEach(n => {
+            let readBy = [];
+            try { readBy = typeof n.readBy === 'string' ? JSON.parse(n.readBy) : (n.readBy || []); } catch (e) { }
+            const isRead = readBy.includes(this.currentUser.id);
+            const badgeClass = n.type === 'success' ? 'badge-success' : 'badge-warning';
+            const icon = n.type === 'success' ? 'fa-check-circle' : 'fa-bell';
+            const bgClass = isRead ? '' : 'unread-notif';
+            const dStr = new Date(n.timestamp).toLocaleString('ar-EG');
+            const bgStyle = isRead ? 'background: var(--bg-main); opacity:0.85;' : 'background: rgba(var(--primary-rgb), 0.1); border-right: 4px solid var(--accent);';
+
+            html += `
+                <div class="${bgClass}" style="margin-bottom: 1rem; padding: 1rem; border-radius: var(--radius-sm); transition: 0.3s ease; ${bgStyle}">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <p style="margin:0; font-size:0.95rem; line-height:1.4;"><i class="fa-solid ${icon} ${badgeClass.replace('badge-', 'text-')}"></i> ${n.message}</p>
+                        ${!isRead ? `<button class="btn btn-sm" style="font-size:0.75rem; background:transparent; color:var(--accent); border:1px solid currentColor;" onclick="app.markAsRead('${n.id}')">تحديد كمقروء</button>` : ''}
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin:0.5rem 0 0 0; text-align:left;">${dStr}</p>
+                </div>
+            `;
+        });
+        notifsContainer.innerHTML = html;
+    }
+
+    async markAsRead(notifId) {
+        if (await storage.markNotificationRead(notifId, this.currentUser.id)) {
+            if (this.currentView === 'reports') {
+                this.loadNotifications();
+            }
+            this.updateNotificationBell();
+        }
+    }
+
+    updateNotificationBell() {
+        if (!this.currentUser) return;
+        const notifs = storage.getNotifications();
+        let unreadCount = 0;
+        notifs.forEach(n => {
+            let readBy = [];
+            try { readBy = typeof n.readBy === 'string' ? JSON.parse(n.readBy) : (n.readBy || []); } catch (e) { }
+            if (!readBy.includes(this.currentUser.id)) {
+                unreadCount++;
+            }
+        });
+
+        const badges = [document.getElementById('desktop-notif-badge'), document.getElementById('mobile-notif-badge')];
+        badges.forEach(b => {
+            if (b) {
+                if (unreadCount > 0) {
+                    b.style.display = 'inline-block';
+                    b.innerText = unreadCount;
+                } else {
+                    b.style.display = 'none';
+                }
+            }
+        });
     }
 }
 

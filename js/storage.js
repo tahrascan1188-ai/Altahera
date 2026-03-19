@@ -10,7 +10,9 @@ class StorageManager {
             devices: [],
             tests: [],
             doctors: [],
-            schedules: []
+            schedules: [],
+            deviceLogs: [],
+            notifications: []
         };
         this.loadLocalCache();
 
@@ -216,6 +218,54 @@ class StorageManager {
                 this.localMutation('UPDATE', 'Devices', data);
                 return true;
             }
+        }
+        return false;
+    }
+    async updateDevice(data) {
+        const res = await this.apiPost('UPDATE', 'Devices', data);
+        if (res) {
+            this.localMutation('UPDATE', 'Devices', data);
+            return true;
+        }
+        return false;
+    }
+
+    // --- DEVICE LOGS ---
+    getDeviceLogs() { return this.cache['deviceLogs'] || []; }
+    async addDeviceLog(data) {
+        const res = await this.apiPost('ADD', 'DeviceLogs', data);
+        if (res) {
+            this.localMutation('ADD', 'DeviceLogs', res);
+            return res;
+        }
+        return false;
+    }
+
+    // --- NOTIFICATIONS ---
+    getNotifications() { return this.cache['notifications'] || []; }
+    async addNotification(data) {
+        const res = await this.apiPost('ADD', 'Notifications', data);
+        if (res) {
+            this.localMutation('ADD', 'Notifications', res);
+            return res;
+        }
+        return false;
+    }
+    async markNotificationRead(id, userId) {
+        const notif = this.getNotifications().find(n => n.id === id);
+        if (notif) {
+            let readBy = [];
+            try { readBy = typeof notif.readBy === 'string' ? JSON.parse(notif.readBy) : (notif.readBy || []); } catch (e) { }
+            if (!readBy.includes(userId)) {
+                readBy.push(userId);
+                notif.readBy = JSON.stringify(readBy);
+                const res = await this.apiPost('UPDATE', 'Notifications', notif);
+                if (res) {
+                    this.localMutation('UPDATE', 'Notifications', notif);
+                    return true;
+                }
+            }
+            return true; // already read
         }
         return false;
     }

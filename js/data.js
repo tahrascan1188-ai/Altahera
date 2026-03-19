@@ -63,12 +63,15 @@ const initialUsers = [
 
 // Seed function
 function seedInitialData(storageManager) {
-    if (!localStorage.getItem('altahera_seeded_v6')) {
+    if (!localStorage.getItem('altahera_seeded_v7')) {
         storageManager.saveLocalCache('branches', initialBranches);
         // Always reset users to ensure correct credentials
         storageManager.saveLocalCache('users', initialUsers);
-        localStorage.setItem('altahera_seeded_v6', 'true');
+        storageManager.saveLocalCache('deviceLogs', []);
+        storageManager.saveLocalCache('notifications', []);
+        localStorage.setItem('altahera_seeded_v7', 'true');
         // Clear old seed keys
+        localStorage.removeItem('altahera_seeded_v6');
         localStorage.removeItem('altahera_seeded_v5');
         localStorage.removeItem('altahera_seeded_v4');
     }
