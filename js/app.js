@@ -945,9 +945,28 @@ class App {
         if (!test) return;
 
         const bodyHtml = `
-            <div class="form-group-modal">
-                <label>سعر التحليل/الأشعة (ج.م)</label>
-                <input type="number" id="modal-test-price" value="${test.price}">
+            <div style="display:flex; gap:1rem;">
+                <div class="form-group-modal" style="flex:1;">
+                    <label>اسم الفحص (بالعربية)</label>
+                    <input type="text" id="modal-edit-test-nameAr" value="${test.nameAr}">
+                </div>
+                <div class="form-group-modal" style="flex:1;">
+                    <label>الاسم (بالإنجليزية)</label>
+                    <input type="text" id="modal-edit-test-nameEn" value="${test.nameEn}">
+                </div>
+            </div>
+            <div style="display:flex; gap:1rem;">
+                <div class="form-group-modal" style="flex:1;">
+                    <label>سعر الفحص (ج.م)</label>
+                    <input type="number" id="modal-test-price" value="${test.price}">
+                </div>
+                <div class="form-group-modal" style="flex:1;">
+                    <label>التصنيف</label>
+                    <select id="modal-edit-test-category">
+                        <option value="Lab" ${test.category === 'Lab' ? 'selected' : ''}>معمل (Lab)</option>
+                        <option value="Radiology" ${test.category === 'Radiology' ? 'selected' : ''}>أشعة (Radiology)</option>
+                    </select>
+                </div>
             </div>
             <div class="form-group-modal">
                 <label>التعليمات (اختياري)</label>
@@ -967,10 +986,16 @@ class App {
 
         const newPrice = document.getElementById('modal-test-price').value;
         const newInst = document.getElementById('modal-test-instructions').value;
+        const newNameAr = document.getElementById('modal-edit-test-nameAr').value.trim();
+        const newNameEn = document.getElementById('modal-edit-test-nameEn').value.trim();
+        const newCategory = document.getElementById('modal-edit-test-category').value;
 
-        if (newPrice !== '' && !isNaN(newPrice)) {
+        if (newPrice !== '' && !isNaN(newPrice) && newNameAr) {
             test.price = parseFloat(newPrice);
             test.instructions = newInst;
+            test.nameAr = newNameAr;
+            test.nameEn = newNameEn;
+            test.category = newCategory;
 
             const btn = document.querySelector('.modal-footer .btn-primary');
             const origText = btn.innerHTML;
@@ -1251,9 +1276,25 @@ class App {
         const bodyHtml = `
             <div style="display:flex; gap:1rem;">
                 <div class="form-group-modal" style="flex:1;">
+                    <label>الاسم الكامل</label>
+                    <input type="text" id="modal-edit-name" value="${user.name}">
+                </div>
+                <div class="form-group-modal" style="flex:1;">
+                    <label>اسم الدخول (Email)</label>
+                    <input type="text" id="modal-edit-email" value="${user.email}">
+                </div>
+            </div>
+            <div style="display:flex; gap:1rem;">
+                <div class="form-group-modal" style="flex:1;">
+                    <label>كلمة المرور</label>
+                    <input type="text" id="modal-edit-password" value="${user.password}">
+                </div>
+                <div class="form-group-modal" style="flex:1;">
                     <label>الدور / الوظيفة</label>
                     <input type="text" id="modal-edit-role" value="${user.role}">
                 </div>
+            </div>
+            <div style="display:flex; gap:1rem;">
                 <div class="form-group-modal" style="flex:1;">
                     <label>الفرع المعين</label>
                     <select id="modal-edit-branch">${branchOpts}</select>
@@ -1275,11 +1316,17 @@ class App {
         const user = storage.getUserById(userId);
         if (!user) return;
 
+        const newName = document.getElementById('modal-edit-name').value.trim();
+        const newEmail = document.getElementById('modal-edit-email').value.trim();
+        const newPassword = document.getElementById('modal-edit-password').value.trim();
         const newRole = document.getElementById('modal-edit-role').value.trim();
         const newBranchId = document.getElementById('modal-edit-branch').value;
         const newPerms = Array.from(document.querySelectorAll('.modal-perm-cb-edit')).filter(cb => cb.checked).map(cb => cb.value);
 
-        if (newRole) {
+        if (newName && newEmail && newPassword && newRole) {
+            user.name = newName;
+            user.email = newEmail;
+            user.password = newPassword;
             user.role = newRole;
             user.branchId = newBranchId;
             user.permissions = newPerms;
@@ -1596,9 +1643,15 @@ class App {
         const branchOpts = branches.map(b => `<option value="${b.id}" ${dev.branchId === b.id ? 'selected' : ''}>${b.name}</option>`).join('');
 
         const bodyHtml = `
-            <div class="form-group-modal">
-                <label>اسم الجهاز</label>
-                <input type="text" id="modal-dev-name" value="${dev.name}" disabled>
+            <div style="display:flex; gap:1rem;">
+                <div class="form-group-modal" style="flex:1;">
+                    <label>اسم الجهاز</label>
+                    <input type="text" id="modal-dev-name" value="${dev.name}">
+                </div>
+                <div class="form-group-modal" style="flex:1;">
+                    <label>التصنيف الأساسي للمعدة</label>
+                    <input type="text" id="modal-dev-type" value="${dev.type}">
+                </div>
             </div>
             <div class="form-group-modal">
                 <label>الفرع الحالي / الجديد</label>
@@ -1630,17 +1683,19 @@ class App {
         const dev = storage.getDeviceById(deviceId);
         if (!dev) return;
 
+        const newDevName = document.getElementById('modal-dev-name').value.trim();
+        const newType = document.getElementById('modal-dev-type').value.trim();
         const newBranch = document.getElementById('modal-dev-branch').value;
         const newStatus = document.getElementById('modal-dev-status').value;
         const reason = document.getElementById('modal-dev-reason').value.trim();
 
-        if (dev.branchId === newBranch && dev.status === newStatus) {
+        if (dev.branchId === newBranch && dev.status === newStatus && dev.name === newDevName && dev.type === newType) {
             this.showToast('لم يتم تغيير أي بيانات', 'warning');
             return;
         }
 
-        if (!reason) {
-            this.showToast('عفواً، يجب كتابة سبب لتوثيق التعديل.', 'error');
+        if ((dev.branchId !== newBranch || dev.status !== newStatus) && !reason) {
+            this.showToast('عفواً، يجب كتابة سبب لتوثيق نقل الفرع أو تغيير الحالة.', 'error');
             return;
         }
 
@@ -1650,6 +1705,8 @@ class App {
         const newBranchName = newBranchObj ? newBranchObj.name : 'غير معروف';
 
         const oldStatus = dev.status;
+        dev.name = newDevName || dev.name;
+        dev.type = newType || dev.type;
         dev.branchId = newBranch;
         dev.status = newStatus;
 
