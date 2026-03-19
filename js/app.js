@@ -175,12 +175,12 @@ class App {
 
         // Update nav links
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        const activeLink = document.querySelector(`.nav - item[data - view="${viewId}"]`);
+        const activeLink = document.querySelector(`.nav-item[data-view="${viewId}"]`);
         if (activeLink) activeLink.classList.add('active');
 
         // Update views
         document.querySelectorAll('.content-view').forEach(el => el.classList.remove('active'));
-        const targetView = document.getElementById(`view - ${viewId}`);
+        const targetView = document.getElementById(`view-${viewId}`);
         if (targetView) targetView.classList.add('active');
 
         this.currentView = viewId;
