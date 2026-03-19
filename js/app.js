@@ -198,7 +198,7 @@ class App {
     }
 
     renderView(viewId) {
-        const container = document.getElementById(`view - ${viewId}`);
+        const container = document.getElementById(`view-${viewId}`);
         if (!container) return;
 
         if (viewId === 'dashboard') {
