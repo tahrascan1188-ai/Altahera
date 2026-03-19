@@ -203,10 +203,10 @@ class App {
 
         if (viewId === 'dashboard') {
             container.innerHTML = `
-        < div class= "dashboard-header" >
+        <div class= "dashboard-header" >
                     <h2>نظرة عامة على النظام</h2>
                     <p>فرع ${this.currentUser.branchName}</p>
-                </div >
+                </div>
             <div class="stats-grid" style="display: flex; gap: 1rem; margin-top: 1rem;">
                 <div class="glass-panel" style="padding: 1.5rem; flex: 1; text-align: center;">
                     <h3 class="text-primary">مرحباً ${this.currentUser.name}</h3>
@@ -234,9 +234,9 @@ class App {
     // --- Tests View ---
     renderTestsView(container) {
         container.innerHTML = `
-            < div class= "view-header" >
+            <div class= "view-header" >
             <h2>دليل التحاليل والأشعة</h2>
-            </div >
+            </div>
             <div class="search-box glass-panel">
                 <i class="fa-solid fa-search"></i>
                 <input type="text" id="test-search-input" placeholder="ابحث باسم التحليل أو الأشعة..." onkeyup="app.filterTests()">
@@ -270,10 +270,10 @@ class App {
             if (!isAvailable) {
                 const device = storage.getDeviceById(test.deviceId);
                 warningHtml = `
-            < div class= "test-warning" >
+            <div class= "test-warning" >
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>غير متاح مؤقتاً لوجود عطل بالجهاز (${device ? device.name : ''}).</span>
-                    </div >
+                    </div>
             `;
             }
 
@@ -289,12 +289,12 @@ class App {
             if (test.allWeek) daysDisp = 'طوال الأسبوع';
 
             card.innerHTML = `
-    < div class="test-card-header" >
+    <div class="test-card-header" >
                     <span class="test-category ${test.category === 'Radiology' ? 'cat-rad' : 'cat-lab'}">
                         ${test.category === 'Radiology' ? 'أشعة' : 'تحليل معملي'}
                     </span>
                     <span class="test-price">${test.price} ج.م</span>
-                </div >
+                </div>
                 <h3>${test.nameAr}</h3>
                 <p class="test-en-name text-muted">${test.nameEn}</p>
                 <div class="test-details">
@@ -325,10 +325,10 @@ class App {
     renderDevicesView(container) {
         const canManageDevices = this.hasPermission('Manage Devices');
         container.innerHTML = `
-    < div class="view-header flex-between" >
+    <div class="view-header flex-between" >
         <h2>أجهزة الأشعة بفرعك</h2>
                 ${canManageDevices ? '<button class="btn btn-primary" onclick="app.showAddDeviceModal()"><i class="fa-solid fa-plus"></i> إضافة جهاز</button>' : ''}
-            </div >
+            </div>
     <div id="devices-grid" class="cards-grid"></div>
 `;
         this.loadDevices();
@@ -368,21 +368,21 @@ class App {
             let managerActions = '';
             if (canManage) {
                 managerActions = `
-    < div class="device-actions" style = "margin-top: 1rem;" >
+    <div class="device-actions" style = "margin-top: 1rem;" >
         <button class="btn btn-outline" style="width:100%; padding:0.4rem; font-size: 0.85rem; border:1px solid var(--border); background:var(--bg-main); cursor:pointer;" onclick="app.editDevicePrompt('${dev.id}')">
             <i class="fa-solid fa-pen"></i> نقل / تعديل الحالة
         </button>
-                    </div >
+                    </div>
     `;
             }
 
             const card = document.createElement('div');
             card.className = 'glass-panel device-card';
             card.innerHTML = `
-    < div class="device-header" >
+    <div class="device-header" >
                     <div class="device-icon"><i class="fa-solid fa-laptop-medical"></i></div>
                     <span class="badge ${statusBadge}"><i class="fa-solid ${icon}"></i> ${statusTextAr}</span>
-                </div >
+                </div>
                 <h3>${dev.name}</h3>
                 <p class="text-muted" style="margin: 0.2rem 0;">النوع: ${dev.type}</p>
                 <p class="text-muted" style="margin: 0.2rem 0; font-size: 0.85rem;"><i class="fa-solid fa-location-dot"></i> فرع ${branch ? branch.name : '?'}</p>
@@ -428,7 +428,7 @@ class App {
         const isCallCenterOrAdmin = this.currentUser.branchId === 'all';
 
         container.innerHTML = `
-    < div class="view-header flex-between" style = "margin-bottom:1.5rem;" >
+    <div class="view-header flex-between" style = "margin-bottom:1.5rem;" >
                 <div>
                     <h2 style="margin:0;"><i class="fa-solid fa-calendar-week" style="color:var(--primary);margin-left:0.5rem;"></i> جدول الأطباء الأسبوعي</h2>
                     <p style="margin:0.25rem 0 0; color:var(--text-muted); font-size:0.9rem;">عرض مواعيد الأطباء لتواريخ حقيقية</p>
@@ -437,7 +437,7 @@ class App {
                     ${canManageDoctors ? '<button class="btn btn-primary" onclick="app.showAddDoctorModal()"><i class="fa-solid fa-user-plus"></i> إضافة طبيب</button>' : ''}
                     ${canManageSchedules ? '<button class="btn" style="background:var(--secondary); color:#fff;" onclick="app.showAddScheduleModal()"><i class="fa-solid fa-calendar-plus"></i> إضافة موعد</button>' : ''}
                 </div>
-            </div >
+            </div>
 
             <div class="calendar-toolbar">
                 <div class="cal-nav-group">

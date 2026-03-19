@@ -254,7 +254,7 @@ body {
 }
 
 .form-group {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     max-width: 400px;
     margin-left: auto;
     margin-right: auto;
@@ -701,7 +701,7 @@ body {
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+    gap: 2.5rem;
 }
 
 .cards-grid>* {
