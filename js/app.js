@@ -1628,8 +1628,8 @@ class App {
 
             const isTransfer = oldBranchName !== newBranchName;
             let notifMsg = isTransfer
-                ? `تم نقل الجهاز (${dev.name}) من (${oldBranchName}) إلى (${newBranchName})`
-                : `تم تحديث جاهزية (${dev.name}) بفرع (${newBranchName}) إلى (${statusMap[newStatus]})`;
+                ? `قام [${this.currentUser.name}] بنقل الجهاز (${dev.name}) من (${oldBranchName}) إلى (${newBranchName})`
+                : `قام [${this.currentUser.name}] بتحديث جاهزية (${dev.name}) بفرع (${newBranchName}) إلى (${statusMap[newStatus]})`;
 
             // Fire and forget logs and notifications to avoid blocking the UI
             Promise.all([
