@@ -1020,6 +1020,8 @@ class App {
         if (activeBtn) activeBtn.classList.add('active');
 
         const grid = document.getElementById('global-devices-grid');
+        if (grid) grid.innerHTML = ''; // Clear grid before filtering
+
         let devices = storage.getDevices();
         if (statusFilter !== 'All') {
             devices = devices.filter(d => d.status === statusFilter);
