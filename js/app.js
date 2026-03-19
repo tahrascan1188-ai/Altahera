@@ -372,7 +372,7 @@ class App {
         <button class="btn btn-outline" style="flex:1; padding:0.4rem; font-size: 0.85rem; border:1px solid var(--border); background:var(--bg-main); cursor:pointer;" onclick="app.editDevicePrompt('${dev.id}')">
             <i class="fa-solid fa-pen"></i> نقل/تعديل
         </button>
-        ${this.currentUser.role === 'Admin' ? `<button class="btn btn-outline" style="padding:0.4rem; font-size: 0.85rem; border:1px solid #fecdd3; background:#fff1f2; color:#be123c; cursor:pointer;" onclick="app.submitDeleteDevice('${dev.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
+        ${this.currentUser.role === 'Administrator' ? `<button class="btn btn-outline" style="padding:0.4rem; font-size: 0.85rem; border:1px solid #fecdd3; background:#fff1f2; color:#be123c; cursor:pointer;" onclick="app.submitDeleteDevice('${dev.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
     </div>
     `;
             }
@@ -933,7 +933,7 @@ class App {
                     <button class="btn btn-primary" onclick="app.editTestPrompt('${test.id}')" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">
                         <i class="fa-solid fa-pen"></i> تعديل
                     </button>
-                    ${this.currentUser.role === 'Admin' ? `<button class="btn" style="background:#fecdd3; color:#be123c; padding: 0.3rem 0.8rem; font-size: 0.85rem; border:1px solid #fecdd3; margin-right: 0.2rem;" onclick="app.submitDeleteTest('${test.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    ${this.currentUser.role === 'Administrator' ? `<button class="btn" style="background:#fecdd3; color:#be123c; padding: 0.3rem 0.8rem; font-size: 0.85rem; border:1px solid #fecdd3; margin-right: 0.2rem;" onclick="app.submitDeleteTest('${test.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>` : ''}
             `;
             tbody.appendChild(tr);
@@ -1103,7 +1103,7 @@ class App {
                         <i class="fa-solid fa-power-off"></i>
                     </button>
                     ${user.id !== 'u_admin' ? `<button class="btn btn-primary" style="padding:0.3rem 0.6rem;" onclick="app.editUserPrompt('${user.id}')" title="تعديل"><i class="fa-solid fa-pen"></i></button>` : ''}
-                    ${this.currentUser.role === 'Admin' && user.id !== 'u_admin' ? `<button class="btn" style="background:#fecdd3; color:#be123c; padding:0.3rem 0.6rem; border:1px solid #fecdd3; margin-right: 0.2rem;" onclick="app.submitDeleteUser('${user.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    ${this.currentUser.role === 'Administrator' && user.id !== 'u_admin' ? `<button class="btn" style="background:#fecdd3; color:#be123c; padding:0.3rem 0.6rem; border:1px solid #fecdd3; margin-right: 0.2rem;" onclick="app.submitDeleteUser('${user.id}', this)" title="حذف نهائي"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>
             `;
             tbody.appendChild(tr);
