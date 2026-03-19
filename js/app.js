@@ -1299,10 +1299,9 @@ class App {
             status: 'Available'
         };
 
-        const res = await storage.apiPost('ADD', 'Devices', newDevice);
+        const res = await storage.addDevice(newDevice);
         if (res) {
             this.showToast('تم إضافة الجهاز بنجاح', 'success');
-            await storage.syncDB();
             if (this.currentView === 'devices') this.loadDevices();
             if (this.currentView === 'global-devices') this.renderGlobalDevicesView(document.getElementById('view-global-devices'));
             this.closeModal();
@@ -1611,33 +1610,35 @@ class App {
         if (await storage.updateDevice(dev)) {
             const statusMap = { 'Available': 'متاح العمل', 'Maintenance': 'صيانة', 'Out of Service': 'خارج الخدمة' };
 
-            await storage.addDeviceLog({
-                id: 'log_' + Date.now(),
-                deviceId: dev.id,
-                deviceName: dev.name,
-                oldBranch: oldBranchName,
-                newBranch: newBranchName,
-                oldStatusStr: statusMap[oldStatus] || oldStatus,
-                newStatusStr: statusMap[newStatus] || newStatus,
-                reason: reason,
-                date: new Date().toISOString(),
-                userName: this.currentUser.name
-            });
-
             const isTransfer = oldBranchName !== newBranchName;
             let notifMsg = isTransfer
                 ? `تم نقل الجهاز (${dev.name}) من (${oldBranchName}) إلى (${newBranchName})`
                 : `تم تحديث جاهزية (${dev.name}) بفرع (${newBranchName}) إلى (${statusMap[newStatus]})`;
 
-            await storage.addNotification({
-                id: 'notif_' + Date.now(),
-                message: notifMsg + ` - السبب: ${reason}`,
-                type: newStatus === 'Available' ? 'success' : 'warning',
-                timestamp: new Date().toISOString(),
-                readBy: JSON.stringify([this.currentUser.id])
-            });
+            // Fire and forget logs and notifications to avoid blocking the UI
+            Promise.all([
+                storage.addDeviceLog({
+                    id: 'log_' + Date.now(),
+                    deviceId: dev.id,
+                    deviceName: dev.name,
+                    oldBranch: oldBranchName,
+                    newBranch: newBranchName,
+                    oldStatusStr: statusMap[oldStatus] || oldStatus,
+                    newStatusStr: statusMap[newStatus] || newStatus,
+                    reason: reason,
+                    date: new Date().toISOString(),
+                    userName: this.currentUser.name
+                }),
+                storage.addNotification({
+                    id: 'notif_' + Date.now(),
+                    message: notifMsg + ` - السبب: ${reason}`,
+                    type: newStatus === 'Available' ? 'success' : 'warning',
+                    timestamp: new Date().toISOString(),
+                    readBy: JSON.stringify([this.currentUser.id])
+                })
+            ]).catch(e => console.error("Logging error", e));
 
-            this.showToast('تم حفظ التقرير وإرسال الإشعار بنجاح!', 'success');
+            this.showToast('تم التعديل وحفظ التقرير وإرسال الإشعار بنجاح!', 'success');
 
             if (this.currentView === 'devices') this.loadDevices();
             if (this.currentView === 'global-devices') {
