@@ -56,10 +56,31 @@ class StorageManager {
             const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 sec timeout (GAS needs time on cold start)
 
             const res = await fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_DB`, { signal: controller.signal });
+            const logsPromise = fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_ALL&sheetName=DeviceLogs`).catch(e => null);
+            const notifsPromise = fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_ALL&sheetName=Notifications`).catch(e => null);
+
             clearTimeout(timeoutId);
             const json = await res.json();
+
             if (json.status === 'success' && json.data) {
                 const db = json.data;
+
+                // Sync the new tables that were not originally included in the Apps Script GET_DB
+                try {
+                    const logsRes = await logsPromise;
+                    if (logsRes) {
+                        const logsJson = await logsRes.json();
+                        if (logsJson.status === 'success') db['devicelogs'] = logsJson.data || [];
+                    }
+                } catch (e) { console.error(e); }
+
+                try {
+                    const notifsRes = await notifsPromise;
+                    if (notifsRes) {
+                        const notifsJson = await notifsRes.json();
+                        if (notifsJson.status === 'success') db['notifications'] = notifsJson.data || [];
+                    }
+                } catch (e) { console.error(e); }
 
                 // Auto-Seed Admin User if Users sheet is completely empty
                 if (!db.users || db.users.length === 0) {
