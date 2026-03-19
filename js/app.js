@@ -898,12 +898,19 @@ class App {
             allWeek: true
         };
 
+        const btn = document.querySelector('.modal-footer .btn-primary');
+        const origText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الاتصال بالخادم...';
+        btn.disabled = true;
+
         if (await storage.addTest(testData)) {
             this.showToast('تمت إضافة الفحص بنجاح', 'success');
             this.loadManageTests(this.hasPermission('Edit Tests'));
             this.closeModal();
         } else {
-            this.showToast('حدث خطأ أثناء الإضافة', 'error');
+            this.showToast('حدث خطأ أثناء الاتصال بالخادم', 'error');
+            btn.innerHTML = origText;
+            btn.disabled = false;
         }
     }
 
@@ -963,12 +970,19 @@ class App {
             test.price = parseFloat(newPrice);
             test.instructions = newInst;
 
+            const btn = document.querySelector('.modal-footer .btn-primary');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري مزامنة التعديلات...';
+            btn.disabled = true;
+
             if (await storage.updateTest(test)) {
                 this.showToast('تم التحديث بنجاح', 'success');
                 this.loadManageTests(this.hasPermission('Edit Tests'));
                 this.closeModal();
             } else {
-                this.showToast('فشل التحديث', 'error');
+                this.showToast('فشل الاتصال لتحديث الفحص', 'error');
+                btn.innerHTML = origText;
+                btn.disabled = false;
             }
         } else {
             this.showToast('الرجاء إدخال سعر صحيح', 'error');
