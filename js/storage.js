@@ -53,21 +53,20 @@ class StorageManager {
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 sec timeout (GAS needs time on cold start)
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sec timeout (GAS needs time on cold start + sequential requests)
 
             const res = await fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_DB`, { signal: controller.signal });
-            const logsPromise = fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_ALL&sheetName=DeviceLogs`).catch(e => null);
-            const notifsPromise = fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_ALL&sheetName=Notifications`).catch(e => null);
-
             clearTimeout(timeoutId);
+
             const json = await res.json();
 
             if (json.status === 'success' && json.data) {
                 const db = json.data;
 
                 // Sync the new tables that were not originally included in the Apps Script GET_DB
+                // Fetch them sequentially to prevent Google Apps Script concurrency throttling timeout
                 try {
-                    const logsRes = await logsPromise;
+                    const logsRes = await fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_ALL&sheetName=DeviceLogs`).catch(e => null);
                     if (logsRes) {
                         const logsJson = await logsRes.json();
                         if (logsJson.status === 'success') db['devicelogs'] = logsJson.data || [];
@@ -75,7 +74,7 @@ class StorageManager {
                 } catch (e) { console.error(e); }
 
                 try {
-                    const notifsRes = await notifsPromise;
+                    const notifsRes = await fetch(`${window.CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=GET_ALL&sheetName=Notifications`).catch(e => null);
                     if (notifsRes) {
                         const notifsJson = await notifsRes.json();
                         if (notifsJson.status === 'success') db['notifications'] = notifsJson.data || [];
