@@ -67,6 +67,7 @@ function initDb() {
 
 // --- Medical Tests Memory Cache & Sync ---
 let cachedTests = [];
+const activeLocks = {}; // chatId -> { userName, socketId, timestamp }
 
 async function syncTestsFromGAS() {
     try {
@@ -367,6 +368,8 @@ app.post('/api/ai/drafts/:id/approve', async (req, res) => {
             
             db.run("UPDATE ai_drafts SET status = 'approved', suggested_reply = ? WHERE id = ?", [reply_text, id], (err2) => {
                 if (err2) console.error(err2);
+                // Also mark other pending drafts for the same chat_id as approved
+                db.run("UPDATE ai_drafts SET status = 'approved' WHERE chat_id = ? AND status = 'pending'", [draft.chat_id]);
                 res.json({ status: 'success', message: 'Message sent and draft approved' });
             });
         } catch (sendErr) {
@@ -411,10 +414,90 @@ app.post('/api/medical-services/sync', (req, res) => {
     }
 });
 
+// Fetch WhatsApp chat history
+app.get('/api/wa/chat-history/:chatId', async (req, res) => {
+    const { chatId } = req.params;
+    if (clientStatus !== 'ready' || !client) {
+        return res.status(400).json({ status: 'error', message: 'WhatsApp client is not connected' });
+    }
+    try {
+        console.log(`📥 Fetching message history for chat: ${chatId}`);
+        const chat = await client.getChatById(chatId);
+        const messages = await chat.fetchMessages({ limit: 20 });
+        
+        // Format messages for frontend
+        const formatted = await Promise.all(messages.map(async (m) => {
+            let mediaData = null;
+            if (m.hasMedia && m.type === 'image') {
+                try {
+                    const media = await m.downloadMedia();
+                    if (media) mediaData = media.data;
+                } catch (me) { console.error('Failed to download history media:', me.message); }
+            }
+            return {
+                id: m.id.id,
+                from: m.from,
+                to: m.to,
+                fromMe: m.fromMe,
+                body: m.body,
+                timestamp: m.timestamp * 1000,
+                hasMedia: m.hasMedia && m.type === 'image',
+                mediaData: mediaData
+            };
+        }));
+        
+        // Return locked status as well
+        const lockInfo = activeLocks[chatId] ? { lockedBy: activeLocks[chatId].userName } : null;
+        
+        res.json({ status: 'success', data: formatted, lockInfo });
+    } catch (err) {
+        console.error('❌ Failed to fetch chat history:', err);
+        res.status(500).json({ status: 'error', message: 'Failed to fetch chat history: ' + err.message });
+    }
+});
+
+// Helper to release locks by socket ID
+function releaseLocksForSocket(socketId) {
+    for (const chatId in activeLocks) {
+        if (activeLocks[chatId].socketId === socketId) {
+            const userName = activeLocks[chatId].userName;
+            delete activeLocks[chatId];
+            io.emit('chat_unlocked', { chatId, userName });
+            console.log(`🔓 Chat ${chatId} unlocked automatically due to disconnect of ${userName}`);
+        }
+    }
+}
+
 // Socket connection
 io.on('connection', (socket) => {
     // Send current status on connect
     socket.emit('wa_status', { status: clientStatus });
+    
+    // Send active locks on connect
+    socket.emit('active_locks', activeLocks);
+
+    // Handle lock chat
+    socket.on('lock_chat', (data) => {
+        const { chatId, userName } = data;
+        activeLocks[chatId] = { userName, socketId: socket.id, timestamp: Date.now() };
+        io.emit('chat_locked', { chatId, userName });
+        console.log(`🔒 Chat ${chatId} locked by ${userName}`);
+    });
+
+    // Handle unlock chat
+    socket.on('unlock_chat', (data) => {
+        const { chatId, userName } = data;
+        if (activeLocks[chatId]) {
+            delete activeLocks[chatId];
+            io.emit('chat_unlocked', { chatId, userName });
+            console.log(`🔓 Chat ${chatId} unlocked by ${userName}`);
+        }
+    });
+
+    // Handle disconnect
+    socket.on('disconnect', () => {
+        releaseLocksForSocket(socket.id);
+    });
 });
 
 server.listen(PORT, () => {
