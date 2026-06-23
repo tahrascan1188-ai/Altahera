@@ -9,6 +9,9 @@ const qrcode = require('qrcode');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+// Bypass self-signed certificate errors caused by firewalls/antivirus
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -168,9 +171,18 @@ function initializeWhatsAppClient() {
     });
 
     client.on('message', async (msg) => {
+        console.log(`📩 Received WhatsApp message from ${msg.from}: "${msg.body || '[Media]'}"`);
+        
         // Load settings to check routing
         db.get("SELECT * FROM ai_settings LIMIT 1", [], async (err, settings) => {
-            if (err || !settings || !settings.api_key) return;
+            if (err) {
+                console.error('❌ Database error while loading settings:', err.message);
+                return;
+            }
+            if (!settings || !settings.api_key) {
+                console.log('⚠️ Skipping message: Gemini API Key is not configured in the AI Settings tab.');
+                return;
+            }
 
             const isGroup = msg.from.endsWith('@g.us');
             
@@ -180,10 +192,18 @@ function initializeWhatsAppClient() {
                 const chat = await msg.getChat();
                 const groupName = chat.name.toLowerCase();
                 const isWhitelisted = whitelist.some(g => g && (groupName.includes(g) || msg.from.includes(g)));
-                if (!isWhitelisted) return; // Skip non-whitelisted group
+                if (!isWhitelisted) {
+                    console.log(`ℹ️ Skipping group message from "${chat.name}" (Group not in whitelist).`);
+                    return;
+                }
             } else {
-                if (!settings.personal_chats_enabled) return; // Skip if personal chats disabled
+                if (!settings.personal_chats_enabled) {
+                    console.log(`ℹ️ Skipping personal message from ${msg.from} (Personal chats disabled in settings).`);
+                    return;
+                }
             }
+
+            console.log(`🤖 Processing message with Gemini AI for ${msg.from}...`);
 
             // Start AI drafting
             try {
@@ -203,7 +223,7 @@ function initializeWhatsAppClient() {
 
                 // Initialize Gemini AI
                 const genAI = new GoogleGenerativeAI(settings.api_key);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
                 const systemPrompt = `
 التعليمات الخاصة بك (System Instructions):
@@ -241,6 +261,7 @@ ${matchingTests.length > 0 ? JSON.stringify(matchingTests, null, 2) : 'لم يت
                     [msg.from, chat.name || msg.from, patientMsgText, mediaData, responseText],
                     function(err) {
                         if (!err) {
+                            console.log(`✅ AI draft generated and saved successfully for "${chat.name || msg.from}".`);
                             // Emit draft update to clients
                             io.emit('new_ai_draft', {
                                 id: this.lastID,
@@ -252,13 +273,13 @@ ${matchingTests.length > 0 ? JSON.stringify(matchingTests, null, 2) : 'لم يت
                                 created_at: new Date()
                             });
                         } else {
-                            console.error('Error inserting draft into SQLite:', err);
+                            console.error('❌ Error inserting draft into SQLite:', err.message);
                         }
                     }
                 );
 
             } catch (aiErr) {
-                console.error('❌ AI response generation failed:', aiErr.message);
+                console.error('❌ Gemini AI generation failed:', aiErr.message);
             }
         });
     });
