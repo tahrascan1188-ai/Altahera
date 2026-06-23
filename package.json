@@ -1,0 +1,22 @@
+{
+  "name": "altahera-management-system",
+  "version": "1.0.0",
+  "description": "Altahera Medical Management System with AI WhatsApp Receptionist Integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "IT & Digital Transformation Department",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.1.1",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.7.5",
+    "sqlite3": "^5.1.7",
+    "whatsapp-web.js": "^1.23.0"
+  }
+}

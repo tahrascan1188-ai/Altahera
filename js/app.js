@@ -16,6 +16,11 @@ class App {
         // Sync Data with Google Sheets in BACKGROUND — never block the login button
         storage.syncDB().catch(() => { });
 
+        // Initialize WhatsApp AI
+        if (window.whatsappAI) {
+            window.whatsappAI.init();
+        }
+
         // Populate branches list if we wanted to show it on login (not needed now since we use email)
 
         // Restore session if exists
@@ -228,6 +233,10 @@ class App {
             this.renderGlobalDevicesView(container);
         } else if (viewId === 'reports') {
             this.renderReportsView(container);
+        } else if (viewId === 'whatsapp-ai') {
+            if (window.whatsappAI) {
+                window.whatsappAI.render(container);
+            }
         }
     }
 
