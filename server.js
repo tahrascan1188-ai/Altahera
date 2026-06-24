@@ -113,6 +113,42 @@ function findMatchingTests(text) {
     });
 }
 
+// Helper to generate Gemini content with API key failover rotation
+async function generateContentWithFailover(apiKeysString, systemPrompt, mediaData, mimeType) {
+    const keys = (apiKeysString || '').split(',').map(k => k.trim()).filter(Boolean);
+    if (keys.length === 0) {
+        throw new Error('No Gemini API keys configured in settings.');
+    }
+    
+    let lastError = null;
+    for (let i = 0; i < keys.length; i++) {
+        const apiKey = keys[i];
+        console.log(`🤖 Attempting Gemini AI generation with Key #${i+1}...`);
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            
+            let result;
+            if (mediaData) {
+                result = await model.generateContent([
+                    systemPrompt,
+                    { inlineData: { data: mediaData, mimeType: mimeType } }
+                ]);
+            } else {
+                result = await model.generateContent(systemPrompt);
+            }
+            
+            const responseText = result.response.text().trim();
+            console.log(`✅ Gemini AI generation succeeded with Key #${i+1}.`);
+            return responseText;
+        } catch (err) {
+            console.warn(`⚠️ Gemini Key #${i+1} failed:`, err.message);
+            lastError = err;
+        }
+    }
+    throw new Error(`All Gemini API keys failed. Last error: ${lastError ? lastError.message : 'Unknown error'}`);
+}
+
 // --- WhatsApp Client Logic ---
 let client;
 let clientStatus = 'disconnected'; // disconnected, authenticating, ready
@@ -222,10 +258,6 @@ function initializeWhatsAppClient() {
                 const patientMsgText = msg.body || '';
                 const matchingTests = findMatchingTests(patientMsgText);
 
-                // Initialize Gemini AI
-                const genAI = new GoogleGenerativeAI(settings.api_key);
-                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
                 const systemPrompt = `
 التعليمات الخاصة بك (System Instructions):
 ${settings.system_instruction}
@@ -243,17 +275,7 @@ ${matchingTests.length > 0 ? JSON.stringify(matchingTests, null, 2) : 'لم يت
 الرسالة الحالية للمريض: "${patientMsgText}"
 `;
 
-                let result;
-                if (mediaData) {
-                    result = await model.generateContent([
-                        systemPrompt,
-                        { inlineData: { data: mediaData, mimeType: mimeType } }
-                    ]);
-                } else {
-                    result = await model.generateContent(systemPrompt);
-                }
-
-                const responseText = result.response.text().trim();
+                const responseText = await generateContentWithFailover(settings.api_key, systemPrompt, mediaData, mimeType);
                 const chat = await msg.getChat();
 
                 // Save draft to SQLite
@@ -425,8 +447,6 @@ app.post('/api/wa/sync-unanswered', async (req, res) => {
                 return res.status(400).json({ status: 'error', message: 'Gemini API Key is not configured' });
             }
             
-            const genAI = new GoogleGenerativeAI(settings.api_key);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
             const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
             
             for (const chat of activeChats) {
@@ -483,17 +503,8 @@ ${matchingTests.length > 0 ? JSON.stringify(matchingTests, null, 2) : 'لم يت
 
 الرسالة الحالية للمريض: "${patientMsgText}"
 `;
-                    let result;
-                    if (mediaData) {
-                        result = await model.generateContent([
-                            systemPrompt,
-                            { inlineData: { data: mediaData, mimeType: mimeType } }
-                        ]);
-                    } else {
-                        result = await model.generateContent(systemPrompt);
-                    }
-                    
-                    const responseText = result.response.text().trim();
+
+                    const responseText = await generateContentWithFailover(settings.api_key, systemPrompt, mediaData, mimeType);
                     
                     // Insert into SQLite
                     await new Promise((resolve) => {
