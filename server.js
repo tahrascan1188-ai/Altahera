@@ -427,6 +427,7 @@ app.post('/api/wa/sync-unanswered', async (req, res) => {
             
             const genAI = new GoogleGenerativeAI(settings.api_key);
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
             
             for (const chat of activeChats) {
                 if (chat.isGroup) continue; // Skip groups for manual sync
@@ -516,6 +517,9 @@ ${matchingTests.length > 0 ? JSON.stringify(matchingTests, null, 2) : 'لم يت
                             }
                         );
                     });
+
+                    // Add 4-second delay to avoid Google Gemini API 503 rate-limiting errors on free tier
+                    await sleep(4000);
                 } catch (chatErr) {
                     console.error(`❌ Manual sync failed for chat ${chat.name || chat.id._serialized}:`, chatErr.message);
                 }
