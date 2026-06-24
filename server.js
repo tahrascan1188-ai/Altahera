@@ -402,6 +402,133 @@ app.get('/api/wa/status', (req, res) => {
     res.json({ status: 'success', data: { status: clientStatus } });
 });
 
+// Sync unanswered chats manually
+app.post('/api/wa/sync-unanswered', async (req, res) => {
+    if (clientStatus !== 'ready' || !client) {
+        return res.status(400).json({ status: 'error', message: 'WhatsApp client is not connected' });
+    }
+    
+    try {
+        console.log('🔄 Manual sync of unanswered messages triggered...');
+        const chats = await client.getChats();
+        
+        // Scan the top 30 active chats
+        const activeChats = chats.slice(0, 30);
+        let newDraftsCount = 0;
+        
+        // Load AI settings to use the API key and prompt
+        db.get("SELECT * FROM ai_settings LIMIT 1", [], async (err, settings) => {
+            if (err) {
+                return res.status(500).json({ status: 'error', message: 'Database error: ' + err.message });
+            }
+            if (!settings || !settings.api_key) {
+                return res.status(400).json({ status: 'error', message: 'Gemini API Key is not configured' });
+            }
+            
+            const genAI = new GoogleGenerativeAI(settings.api_key);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            
+            for (const chat of activeChats) {
+                if (chat.isGroup) continue; // Skip groups for manual sync
+                
+                try {
+                    const messages = await chat.fetchMessages({ limit: 1 });
+                    if (messages.length === 0) continue;
+                    
+                    const lastMsg = messages[0];
+                    // If the last message is from me, it means we answered the patient. Skip.
+                    if (lastMsg.fromMe) continue;
+                    
+                    const chatId = lastMsg.from;
+                    
+                    // Check if a pending draft already exists for this chat_id
+                    const draftExists = await new Promise((resolve) => {
+                        db.get("SELECT id FROM ai_drafts WHERE chat_id = ? AND status = 'pending'", [chatId], (err, row) => {
+                            resolve(!!row);
+                        });
+                    });
+                    
+                    if (draftExists) continue; // Skip if already pending in queue
+                    
+                    console.log(`🤖 Generating suggested reply for unanswered chat: ${chat.name || chatId}`);
+                    
+                    let mediaData = null;
+                    let mimeType = null;
+                    
+                    if (lastMsg.hasMedia && lastMsg.type === 'image') {
+                        const media = await lastMsg.downloadMedia();
+                        if (media) {
+                            mediaData = media.data;
+                            mimeType = media.mimetype;
+                        }
+                    }
+                    
+                    const patientMsgText = lastMsg.body || '';
+                    const matchingTests = findMatchingTests(patientMsgText);
+                    
+                    const systemPrompt = `
+التعليمات الخاصة بك (System Instructions):
+${settings.system_instruction}
+
+قاعدة بيانات التحاليل والأشعة المتاحة بالمركز والمطابقة لاستفسار المريض:
+${matchingTests.length > 0 ? JSON.stringify(matchingTests, null, 2) : 'لم يتم العثور على فحوصات مطابقة في قاعدة البيانات.'}
+
+ملاحظة هامة جداً للالتزام بها:
+1. يجب الالتزام بالأسعار والتعليمات المذكورة في الجدول أعلاه فقط بشكل حرفي!
+2. إذا لم تجد التحليل أو الفحص المطلوب في الجدول، أخبر المريض بلطف أنك لم تجد هذا الفحص في قاعدة البيانات وسيتم الرد عليه من قبل الموظف المختص فوراً. لا تقم أبداً بتأليف أسعار أو تعليمات أو شروط من رأسك!
+3. إذا أرسل المريض صورة روشتة تحتوي على فحوصات متعددة، قم بفحص الصورة، ثم ابحث عن أسعار كل فحص منها واعرض أسعارها وتعليماتها المذكورة فقط.
+4. أجب باللغة العربية الفصحى أو العامية المهذبة بأسلوب ودود واحترافي كمنسق طبي بالمركز.
+5. لا تشرح للمريض كيف يعمل الذكاء الاصطناعي أو تذكر كلمة "جدول مطابقة" أو "قاعدة بيانات".
+
+الرسالة الحالية للمريض: "${patientMsgText}"
+`;
+                    let result;
+                    if (mediaData) {
+                        result = await model.generateContent([
+                            systemPrompt,
+                            { inlineData: { data: mediaData, mimeType: mimeType } }
+                        ]);
+                    } else {
+                        result = await model.generateContent(systemPrompt);
+                    }
+                    
+                    const responseText = result.response.text().trim();
+                    
+                    // Insert into SQLite
+                    await new Promise((resolve) => {
+                        db.run(
+                            `INSERT INTO ai_drafts (chat_id, chat_name, message_body, media_data, suggested_reply, status) VALUES (?, ?, ?, ?, ?, 'pending')`,
+                            [chatId, chat.name || chatId, patientMsgText, mediaData, responseText],
+                            function(err) {
+                                if (!err) {
+                                    newDraftsCount++;
+                                    io.emit('new_ai_draft', {
+                                        id: this.lastID,
+                                        chat_id: chatId,
+                                        chat_name: chat.name || chatId,
+                                        message_body: patientMsgText,
+                                        media_data: mediaData,
+                                        suggested_reply: responseText,
+                                        created_at: new Date()
+                                    });
+                                }
+                                resolve();
+                            }
+                        );
+                    });
+                } catch (chatErr) {
+                    console.error(`❌ Manual sync failed for chat ${chat.name || chat.id._serialized}:`, chatErr.message);
+                }
+            }
+            
+            res.json({ status: 'success', message: `تمت عملية المزامنة بنجاح. تم العثور على ${newDraftsCount} رسائل غير مجاب عليها وتوليد ردود لها.` });
+        });
+    } catch (e) {
+        console.error('❌ Failed manual sync of unanswered messages:', e);
+        res.status(500).json({ status: 'error', message: 'Failed manual sync: ' + e.message });
+    }
+});
+
 // Sync tests from frontend
 app.post('/api/medical-services/sync', (req, res) => {
     const { tests } = req.body;

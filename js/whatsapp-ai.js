@@ -277,6 +277,40 @@ class WhatsAppAI {
         }
     }
 
+    async syncUnansweredChats() {
+        if (this.waStatus !== 'ready') {
+            if (window.app) window.app.showToast('يجب ربط الواتساب وتوصيله أولاً لسحب الرسائل المعلقة', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('wa-sync-unanswered-btn');
+        if (!btn) return;
+
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> جاري السحب...`;
+        btn.disabled = true;
+
+        try {
+            if (window.app) window.app.showToast('جاري سحب المحادثات غير المجاب عليها وتوليد ردود لها... قد يستغرق ذلك دقيقة.', 'info');
+            
+            const response = await fetch('/api/wa/sync-unanswered', { method: 'POST' });
+            const json = await response.json();
+            
+            if (json.status === 'success') {
+                if (window.app) window.app.showToast(json.message, 'success');
+                await this.loadDrafts();
+            } else {
+                if (window.app) window.app.showToast('فشل في سحب الرسائل: ' + json.message, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            if (window.app) window.app.showToast('حدث خطأ أثناء الاتصال بالخادم', 'error');
+        } finally {
+            btn.innerHTML = origHtml;
+            btn.disabled = false;
+        }
+    }
+
     async approveActiveDraft() {
         const id = this.activeDraftId;
         if (!id) return;
@@ -855,6 +889,9 @@ class WhatsAppAI {
                             <div style="display:flex; align-items:center; gap: 0.4rem;">
                                 <!-- Pulsing WA Connection status dot -->
                                 <span id="header-wa-status-dot" style="width: 10px; height: 10px; border-radius: 50%; background-color: #ff4757; box-shadow: 0 0 6px #ff4757; display: inline-block; cursor: pointer;" onclick="whatsappAI.showConnectionModal()" title="غير متصل"></span>
+                                <button class="btn btn-outline" id="wa-sync-unanswered-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-color: rgba(102, 26, 87, 0.2); cursor: pointer;" onclick="whatsappAI.syncUnansweredChats()" title="سحب الرسائل غير المردود عليها">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i> سحب
+                                </button>
                                 <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-color: rgba(102, 26, 87, 0.2); cursor: pointer;" onclick="whatsappAI.showConnectionModal()" title="ربط واتساب">
                                     <i class="fa-brands fa-whatsapp"></i> الربط
                                 </button>
