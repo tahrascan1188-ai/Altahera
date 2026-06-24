@@ -503,16 +503,30 @@ io.on('connection', (socket) => {
 const os = require('os');
 function getLocalIpAddress() {
     const interfaces = os.networkInterfaces();
+    const ipList = [];
     for (const devName in interfaces) {
+        const lowerName = devName.toLowerCase();
+        if (lowerName.includes('wsl') || 
+            lowerName.includes('docker') || 
+            lowerName.includes('virtual') || 
+            lowerName.includes('vbox') || 
+            lowerName.includes('vmware') || 
+            lowerName.includes('loopback') ||
+            lowerName.includes('ethernet 2') || // commonly virtual
+            lowerName.includes('host-only')) {
+            continue;
+        }
         const iface = interfaces[devName];
         for (let i = 0; i < iface.length; i++) {
             const alias = iface[i];
             if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
-                return alias.address;
+                ipList.push(alias.address);
             }
         }
     }
-    return 'localhost';
+    // Prioritize LAN/Wi-Fi addresses (e.g. 192.168.x.x or 10.x.x.x)
+    const lanIp = ipList.find(ip => ip.startsWith('192.168.') || ip.startsWith('10.'));
+    return lanIp || ipList[0] || 'localhost';
 }
 
 const localIp = getLocalIpAddress();
