@@ -1,6 +1,10 @@
 // services/aiService.js
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const supabase = require('./supabaseService');
+const fs = require('fs');
+const path = require('path');
+
+const localSettingsPath = path.join(__dirname, '..', 'local_ai_settings.json');
 
 const DEFAULT_API_KEY = process.env.GEMINI_API_KEY || '';
 const DEFAULT_SYSTEM_INSTRUCTION = `أنت المنسق الطبي ومساعد خدمة العملاء الذكي لـ "مركز الطاهرة للتحاليل والأشعة". وظيفتك هي الرد على استفسارات المرضى والعملاء عبر واتساب بأسلوب مهذب، ودود، واحترافي.
@@ -55,7 +59,17 @@ async function generateReply(messageBody, mediaData, mimeType) {
             settings = data;
         }
     } catch (dbErr) {
-        console.warn('⚠️ Failed to fetch AI settings from database, using defaults:', dbErr.message);
+        console.warn('⚠️ Failed to fetch AI settings from database:', dbErr.message);
+    }
+
+    // Fallback to local settings file if DB failed or returned empty settings
+    if (!settings && fs.existsSync(localSettingsPath)) {
+        try {
+            settings = JSON.parse(fs.readFileSync(localSettingsPath, 'utf8'));
+            console.log('💾 AI settings loaded from local_ai_settings.json');
+        } catch (fsErr) {
+            console.error('❌ Failed to read local_ai_settings.json:', fsErr.message);
+        }
     }
 
     const keys = [

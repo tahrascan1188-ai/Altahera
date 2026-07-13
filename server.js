@@ -5,6 +5,9 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
+
+const localSettingsPath = path.join(__dirname, 'local_ai_settings.json');
 const supabase = require('./services/supabaseService');
 const whatsappService = require('./services/whatsappService');
 const aiService = require('./services/aiService');
@@ -55,15 +58,33 @@ const DEFAULT_SYSTEM_INSTRUCTION = `أنت المنسق الطبي ومساعد 
 // Get AI settings from Supabase
 app.get('/api/ai/settings', async (req, res) => {
     try {
-        const { data, error } = await supabase
-            .from('ai_settings')
-            .select('*')
-            .eq('id', 1)
-            .single();
+        let responseData = null;
 
-        let responseData = data || {};
-        if (error) {
-            console.error('Error fetching AI settings from database, using defaults:', error.message);
+        // 1. Try fetching from Supabase
+        try {
+            const { data, error } = await supabase
+                .from('ai_settings')
+                .select('*')
+                .eq('id', 1)
+                .single();
+            if (!error && data) {
+                responseData = data;
+            }
+        } catch (dbErr) {
+            console.warn('⚠️ Supabase fetch failed in GET, checking local storage:', dbErr.message);
+        }
+
+        // 2. Fallback to local settings file
+        if (!responseData && fs.existsSync(localSettingsPath)) {
+            try {
+                responseData = JSON.parse(fs.readFileSync(localSettingsPath, 'utf8'));
+            } catch (fsErr) {
+                console.error('❌ Failed to read local_ai_settings.json:', fsErr.message);
+            }
+        }
+
+        // 3. Fallback to defaults
+        if (!responseData) {
             responseData = {
                 id: 1,
                 api_key_1: DEFAULT_API_KEY,
@@ -105,29 +126,43 @@ app.get('/api/ai/settings', async (req, res) => {
 // Update AI settings in Supabase
 app.post('/api/ai/settings', async (req, res) => {
     const { api_key_1, api_key_2, api_key_3, system_instruction, personal_chats_enabled, groups_whitelist } = req.body;
+    
+    const settingsObj = {
+        id: 1,
+        api_key_1,
+        api_key_2,
+        api_key_3,
+        system_instruction,
+        personal_chats_enabled: !!personal_chats_enabled,
+        groups_whitelist: groups_whitelist || '',
+        active_key_index: 1
+    };
+
+    // 1. Try saving locally first (guaranteed to succeed offline)
     try {
-        const { data, error } = await supabase
+        fs.writeFileSync(localSettingsPath, JSON.stringify(settingsObj, null, 2), 'utf8');
+        console.log('💾 AI settings saved locally to local_ai_settings.json');
+    } catch (fsErr) {
+        console.error('❌ Failed to save AI settings locally:', fsErr.message);
+    }
+
+    // 2. Try saving to Supabase (catch error to prevent 500 error if database is offline)
+    try {
+        const { error } = await supabase
             .from('ai_settings')
-            .upsert({
-                id: 1,
-                api_key_1,
-                api_key_2,
-                api_key_3,
-                system_instruction,
-                personal_chats_enabled: !!personal_chats_enabled,
-                groups_whitelist: groups_whitelist || '',
-                active_key_index: 1 // Default index
-            });
+            .upsert(settingsObj);
 
         if (error) {
-            console.error('Error updating AI settings:', error);
-            return res.status(500).json({ status: 'error', error: error.message });
+            console.error('⚠️ Supabase settings upsert failed:', error.message);
+        } else {
+            console.log('💾 AI settings successfully synced to Supabase.');
         }
-        res.json({ status: 'success', message: 'Settings updated successfully' });
-    } catch (err) {
-        console.error('Server error updating AI settings:', err);
-        res.status(500).json({ status: 'error', error: err.message });
+    } catch (dbErr) {
+        console.warn('⚠️ Supabase offline, settings saved locally only:', dbErr.message);
     }
+
+    // Always return success since we successfully saved it locally
+    res.json({ status: 'success', message: 'Settings updated successfully' });
 });
 
 // Sync medical services endpoint (compatibility stub)
