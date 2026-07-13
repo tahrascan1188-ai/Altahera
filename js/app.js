@@ -428,14 +428,12 @@ class App {
             this.calendarCurrentDate = new Date();
         }
         if (!this.calendarBranchFilter) {
-            this.calendarBranchFilter = this.currentUser.branchId === 'all' ? 'all' : this.currentUser.branchId;
+            this.calendarBranchFilter = 'all';
         }
 
         const branches = storage.getBranches();
-        const branchOpts = `< option value = "all" > كل الفروع</option > ` +
-            branches.map(b => `< option value = "${b.id}" ${this.calendarBranchFilter === b.id ? 'selected' : ''}> ${b.name}</option > `).join('');
-
-        const isCallCenterOrAdmin = this.currentUser.branchId === 'all';
+        const branchOpts = `<option value="all">كل الفروع</option>` +
+            branches.map(b => `<option value="${b.id}" ${this.calendarBranchFilter === b.id ? 'selected' : ''}>${b.name}</option>`).join('');
 
         container.innerHTML = `
     <div class="view-header flex-between" style = "margin-bottom:1.5rem;" >
@@ -456,13 +454,12 @@ class App {
                     <button class="btn btn-icon" title="الأسبوع التالي" onclick="app.nextWeek()"><i class="fa-solid fa-chevron-left"></i></button>
                     <button class="btn btn-outline" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="app.jumpToToday()">اليوم</button>
                 </div>
-                ${isCallCenterOrAdmin ? `
                 <div class="cal-filter-group">
                     <i class="fa-solid fa-building" style="color:var(--text-muted);"></i>
                     <select id="calendar-branch-filter" onchange="app.calendarBranchFilter = this.value; app.loadDoctorsCalendar(${canManageSchedules});">
                         ${branchOpts}
                     </select>
-                </div>` : ''}
+                </div>
             </div>
 
             <div id="weekly-calendar" class="weekly-calendar-grid"></div>
@@ -518,23 +515,24 @@ class App {
             labelEl.textContent = `${weekDates[0].toLocaleDateString('ar-EG', d1Options)} - ${weekDates[6].toLocaleDateString('ar-EG', d2Options)} `;
         }
 
-        let allDoctors = [];
-        if (this.calendarBranchFilter === 'all') {
-            allDoctors = storage.getDoctors();
-        } else {
-            allDoctors = storage.getDoctorsByBranch(this.calendarBranchFilter);
+        let allSchedules = storage.getSchedules();
+        if (this.calendarBranchFilter !== 'all') {
+            allSchedules = allSchedules.filter(sch => {
+                const doc = storage.getDoctorById(sch.doctorId);
+                const schBranch = sch.branchId || (doc ? doc.branchId : null);
+                return schBranch === this.calendarBranchFilter;
+            });
         }
 
         // Build map: day → list of {doc, sch}
         const dayMap = {};
         days.forEach(d => dayMap[d] = []);
 
-        allDoctors.forEach(doc => {
-            storage.getSchedulesByDoctor(doc.id).forEach(sch => {
-                if (dayMap[sch.dayOfWeek] !== undefined) {
-                    dayMap[sch.dayOfWeek].push({ doc, sch });
-                }
-            });
+        allSchedules.forEach(sch => {
+            const doc = storage.getDoctorById(sch.doctorId);
+            if (doc && dayMap[sch.dayOfWeek] !== undefined) {
+                dayMap[sch.dayOfWeek].push({ doc, sch });
+            }
         });
 
         // Determine today's actual date string to highlight the current day
@@ -676,19 +674,22 @@ class App {
         const cardsEl = document.getElementById('day-detail-cards');
         if (!cardsEl) return;
 
-        let allDoctors = storage.getDoctors();
-        if (branchVal !== 'all') allDoctors = allDoctors.filter(d => d.branchId === branchVal);
-        if (searchVal) allDoctors = allDoctors.filter(d => d.name.toLowerCase().includes(searchVal) || (d.specialty || '').toLowerCase().includes(searchVal));
+        let allSchedules = storage.getSchedules().filter(s => s.dayOfWeek === day);
+        if (statusVal !== 'all') {
+            allSchedules = allSchedules.filter(s => s.status === statusVal);
+        }
 
         let entries = [];
-        allDoctors.forEach(doc => {
-            storage.getSchedulesByDoctor(doc.id).forEach(sch => {
-                if (sch.dayOfWeek === day) {
-                    if (statusVal === 'all' || sch.status === statusVal) {
+        allSchedules.forEach(sch => {
+            const doc = storage.getDoctorById(sch.doctorId);
+            if (doc) {
+                const schBranch = sch.branchId || doc.branchId;
+                if (branchVal === 'all' || schBranch === branchVal) {
+                    if (!searchVal || doc.name.toLowerCase().includes(searchVal) || (doc.specialty || '').toLowerCase().includes(searchVal)) {
                         entries.push({ doc, sch });
                     }
                 }
-            });
+            }
         });
 
         if (entries.length === 0) {
@@ -697,7 +698,7 @@ class App {
         }
 
         cardsEl.innerHTML = entries.map(({ doc, sch }) => {
-            const branch = storage.getBranchById(doc.branchId);
+            const branch = storage.getBranchById(sch.branchId || doc.branchId);
             const branchName = branch ? branch.name : doc.branchId;
             const badgeColor = sch.status === 'Available' ? 'var(--success)' : sch.status === 'Excused' ? '#f59e0b' : 'var(--danger)';
             const statusText = sch.status === 'Available' ? 'متاح' : sch.status === 'Excused' ? 'معتذر' : 'غير متاح';
@@ -1463,12 +1464,7 @@ class App {
     }
 
     showAddScheduleModal() {
-        let allDoctors = [];
-        if (this.currentUser.branchId === 'all') {
-            allDoctors = storage.getDoctors();
-        } else {
-            allDoctors = storage.getDoctorsByBranch(this.currentUser.branchId);
-        }
+        const allDoctors = storage.getDoctors();
 
         if (allDoctors.length === 0) {
             this.showToast('لا يوجد أطباء مسجلين لإضافة مواعيد لهم', 'error');
@@ -1476,6 +1472,8 @@ class App {
         }
 
         const docOpts = allDoctors.map(d => `<option value="${d.id}">${d.name} (${d.specialty})</option>`).join('');
+        const branches = storage.getBranches();
+        const branchOpts = branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
         const days = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
         const dayOpts = days.map(d => `<option value="${d}">${d}</option>`).join('');
 
@@ -1484,6 +1482,12 @@ class App {
                 <label>اختر الطبيب</label>
                 <select id="modal-sch-doc">
                     ${docOpts}
+                </select>
+            </div>
+            <div class="form-group-modal">
+                <label>الفرع</label>
+                <select id="modal-sch-branch">
+                    ${branchOpts}
                 </select>
             </div>
             <div class="form-group-modal">
@@ -1510,11 +1514,12 @@ class App {
 
     async submitAddSchedule() {
         const docId = document.getElementById('modal-sch-doc').value;
+        const branchId = document.getElementById('modal-sch-branch').value;
         const day = document.getElementById('modal-sch-day').value;
         const start = document.getElementById('modal-sch-start').value;
         const end = document.getElementById('modal-sch-end').value;
 
-        if (!docId || !day || !start || !end) {
+        if (!docId || !branchId || !day || !start || !end) {
             this.showToast('يجب إكمال جميع البيانات', 'error');
             return;
         }
@@ -1526,7 +1531,7 @@ class App {
         const schId = 'sch_' + Date.now();
 
         await storage.apiPost('ADD', 'Schedules', {
-            id: schId, doctorId: docId, dayOfWeek: day, startTime: start, endTime: end, status: 'Available'
+            id: schId, doctorId: docId, branchId: branchId, dayOfWeek: day, startTime: start, endTime: end, status: 'Available'
         });
 
         this.showToast('تم الإضافة بنجاح', 'success');

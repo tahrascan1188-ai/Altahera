@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الطاهرة للأشعة والتحاليل الطبية | نظام الإدارة الموحد</title>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/svg+xml" href="img/trc-logo.svg">
     <!-- Fonts via Bunny.net (works even when Google is blocked) -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=tajawal:400,500,700,800&display=swap" rel="stylesheet">
@@ -312,7 +312,15 @@
     <!-- Application Scripts -->
     <script src="js/data.js"></script>
     <script src="js/storage.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Load socket.io dynamically to support loading from backend port (3000) when running frontend on custom dev ports (like 5500) -->
+    <script>
+        (function() {
+            const backendPort = '3000';
+            const isBackendOrigin = window.location.port === backendPort;
+            const backendUrl = isBackendOrigin ? '' : 'http://localhost:' + backendPort;
+            document.write('<script src="' + backendUrl + '/socket.io/socket.io.js"><\/script>');
+        })();
+    </script>
     <script src="js/whatsapp-ai.js"></script>
     <script src="js/app.js"></script>
 
